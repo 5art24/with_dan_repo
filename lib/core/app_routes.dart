@@ -9,12 +9,18 @@ import 'package:project1_collage/features/browsing_services/presentation/views/d
 import 'package:project1_collage/features/browsing_services/presentation/views/services_browser_page.dart';
 import 'package:project1_collage/features/details_page/constant_event/event_booking_details.dart';
 import 'package:project1_collage/features/details_page/service/views/details_page.dart';
-import 'package:project1_collage/features/explore_constant_events/views/explore_constant_events_body.dart';
 import 'package:project1_collage/features/explore_constant_events/views/explore_constant_events_page.dart';
 import 'package:project1_collage/features/home/views/home_view.dart';
 import 'package:project1_collage/core/widgets/custom_nav_bar.dart';
 import 'package:project1_collage/features/home/views/see_all_events.dart';
 import 'package:project1_collage/features/planning_event/presentation/views/planning_event_view.dart';
+import 'package:project1_collage/features/profile/views/auth/login_screen.dart';
+import 'package:project1_collage/features/profile/views/auth/register_screen.dart';
+import 'package:project1_collage/features/profile/views/provider/service_profile_page.dart';
+import 'package:project1_collage/features/profile/views/profile_page.dart';
+import 'package:project1_collage/features/profile/views/provider/become_provider_page.dart';
+import 'package:project1_collage/features/profile/views/wallet/wallet_page.dart';
+import 'package:project1_collage/features/profile/views/settings/app_settings_page.dart';
 import 'package:project1_collage/features/search_results/view_model/search_cubit.dart';
 import 'package:project1_collage/features/search_results/views/search_results_page.dart';
 
@@ -32,16 +38,21 @@ abstract class AppRoutes {
       "/explore-constant-events/constant-event-details";
   static String kSearchResults = "/explore-constant-events/search-results";
   static String kSeeAllEvents = "/see-all-events";
+  static String kLogin = "/login";
+  static String kServiceProfile = "/service-profile";
+  static String kProfile = "/profile";
+  static String kBecomeProvider = "/become-provider";
+  static String kWallet = "/wallet";
+  static String kAppSettings = "/app-settings";
+  static String kRegister = "/register";
   static final router = GoRouter(
-    initialLocation: kHomeView,
+    initialLocation: kLogin,
     routes: [
-      // استخدام ShellRoute للصفحات الرئيسية فقط
       ShellRoute(
         builder: (context, state, child) {
           return MainPageWithNavigationBar(body: child);
         },
         routes: [
-          // الصفحات الرئيسية التي تظهر فيها الـ NavBar
           GoRoute(
             path: kHomeView,
             builder: (context, state) => const HomeView(),
@@ -54,7 +65,6 @@ abstract class AppRoutes {
             path: kExploreConstantEvents,
             builder: (context, state) => ExploreConstantEventsPage(),
           ),
-          //Still need profile
         ],
       ),
       GoRoute(
@@ -81,7 +91,6 @@ abstract class AppRoutes {
       ),
       GoRoute(
         path: kDispalyingSelectedServices,
-
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
           final event = extra['event'] as PersonalEvent;
@@ -117,6 +126,34 @@ abstract class AppRoutes {
         path: kSeeAllEvents,
         builder: (context, state) => const SeeAllEvents(),
       ),
+      GoRoute(
+        path: kLogin,
+        builder: (context, state) => const LoginScreen(),
+      ),
+GoRoute(
+        path: kServiceProfile,
+        builder: (context, state) => const ServiceProfilePage(),
+      ),
+      GoRoute(
+        path: kProfile,
+        builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: kBecomeProvider,
+        builder: (context, state) => const BecomeProviderPage(),
+      ),
+      GoRoute(
+        path: kWallet,
+        builder: (context, state) => const WalletPage(),
+      ),
+      GoRoute(
+        path: kAppSettings,
+        builder: (context, state) => const AppSettingsPage(),
+      ),
+      GoRoute(
+        path: kRegister,
+        builder: (context, state) => const RegisterScreen(),
+      ),
     ],
   );
 }
@@ -126,24 +163,29 @@ class MainPageWithNavigationBar extends StatelessWidget {
   final Widget body;
   @override
   Widget build(BuildContext context) {
-    //  final cubit = context.watch<PlanningCubit>();
+    // TODO: Get isServiceProvider from auth state (SharedPreferences, Provider, etc.)
+    // For now, default to false
+    final isServiceProvider = false;
+    
     return Scaffold(
       body: Stack(
         children: [
-          // تمرير نفس الـ Cubit للصفحات الفرعية
-          // BlocProvider.value(
-          //   value: cubit,
-          //   child: body,
-          // ),
           body,
           Align(
             alignment: AlignmentGeometry.bottomCenter,
-            child: CustomNavBar(),
+            child: CustomNavBar(
+              isServiceProvider: isServiceProvider,
+              onModeSwitch: () {
+                // TODO: Implement mode switch logic
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('تبديل الوضع - قيد التطوير')),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 }
-//Notes after planning event the next page is view the selected services after that add specific tasks to the event  
-//after browsing constant events can search about evetn and had the results in anthor page and can get the displayed events depending omn the location the use determine it  
+

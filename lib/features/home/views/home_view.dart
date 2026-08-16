@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/view_model/task/task_cubit.dart';
-import 'package:project1_collage/features/home/views/widgets/custom_drawer.dart';
+import 'package:project1_collage/core/widgets/drawer_menu.dart';
 import 'package:project1_collage/features/home/views/widgets/day_filters_list.dart';
 import 'package:project1_collage/features/home/views/widgets/displaying_task_cards.dart';
 import 'package:project1_collage/features/home/views/widgets/upcoming_events_cards.dart';
@@ -15,11 +15,20 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedDay = DateTime.now();
 
     return Scaffold(
-      drawer: const CustomDrawer(),
+      drawer: DrawerMenu(
+        userName: 'أحمد الزعبي',
+        userEmail: 'ahmed@example.com',
+        isServiceProvider: false,
+        onServiceProviderToggle: (value) {},
+        onLogout: () {
+          GoRouter.of(context).go(AppRoutes.kLogin);
+        },
+      ),
       appBar: AppBar(
+        backgroundColor: Styles.background,
+        elevation: 0,
         leading: null,
         automaticallyImplyLeading: false,
         title: Padding(
@@ -32,7 +41,7 @@ class HomeView extends StatelessWidget {
               child: Text(
                 "eva",
                 style: Styles.largeTitle.copyWith(
-                  color: Styles.mainColor,
+                  color: Styles.primary,
                   fontSize: 40,
                 ),
               ),
@@ -44,7 +53,7 @@ class HomeView extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12.0),
             child: Icon(
               Icons.calendar_month_outlined,
-              color: Styles.mainColor,
+              color: Styles.primary,
               size: 24,
             ),
           ),
@@ -62,13 +71,11 @@ class HomeView extends StatelessWidget {
                   Text("Upcoming Events", style: Styles.largeTitle),
                   TextButton(
                     onPressed: () {
-                      GoRouter.of(context).push(
-                       '/see-all-events'
-                      );
+                      GoRouter.of(context).push(AppRoutes.kSeeAllEvents);
                     },
                     child: Text(
                       "see all",
-                      style: Styles.body.copyWith(color: Styles.mainColor),
+                      style: Styles.body.copyWith(color: Styles.primary),
                     ),
                   ),
                 ],
