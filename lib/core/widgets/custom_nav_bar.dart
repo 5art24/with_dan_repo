@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/app_routes.dart';
 
 class CustomNavBar extends StatefulWidget {
-  const CustomNavBar({super.key});
+  final bool isServiceProvider;
+  final VoidCallback? onModeSwitch;
+
+  const CustomNavBar({
+    super.key,
+    this.isServiceProvider = false,
+    this.onModeSwitch,
+  });
   
   @override
   State<CustomNavBar> createState() => _CustomNavBarState();
@@ -15,6 +22,15 @@ class _CustomNavBarState extends State<CustomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    // List of tabs - profile only for service providers
+    final List<_NavTab> tabs = [
+      _NavTab(index: 0, icon: Icons.home, route: AppRoutes.kHomeView),
+      _NavTab(index: 1, icon: Icons.search, route: AppRoutes.kPlanEvent),
+      _NavTab(index: 2, icon: Icons.add, route: AppRoutes.kExploreConstantEvents),
+      if (widget.isServiceProvider)
+        _NavTab(index: 3, icon: Icons.person, route: AppRoutes.kProfile),
+    ];
+
     return Container(
       constraints: const BoxConstraints(
         minHeight: 65,
@@ -36,50 +52,54 @@ class _CustomNavBarState extends State<CustomNavBar> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BottomNavigationBarButton(
-            index: 0,
-            onTap: (index) {
-                setState(() => selectedIndex = index);
-              GoRouter.of(context).go(AppRoutes.kHomeView);
-            },
-            selectedIndex: selectedIndex,
-          ),
-          BottomNavigationBarButton(
-            index: 1,
-            onTap: (index) {
-                setState(() => selectedIndex = index);
-              GoRouter.of(context).go(AppRoutes.kPlanEvent);
-            },
-            selectedIndex: selectedIndex,
-          ),
-          BottomNavigationBarButton(
-            selectedIndex: selectedIndex,
-            index: 2,
+          ...tabs.map((tab) => BottomNavigationBarButton(
+            index: tab.index,
             onTap: (index) {
               setState(() => selectedIndex = index);
-              GoRouter.of(context).go(AppRoutes.kExploreConstantEvents);
+              GoRouter.of(context).go(tab.route);
             },
-          ),
-          BottomNavigationBarButton(
             selectedIndex: selectedIndex,
-            index: 3,
-            onTap: (index) {
-             setState(() => selectedIndex = index);
-             //should be profile
-              
-            },
-          ),
+          )),
+          // Mode switch button for service providers
+          if (widget.isServiceProvider && widget.onModeSwitch != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: IconButton(
+                onPressed: widget.onModeSwitch,
+                icon: Icon(
+                  Icons.swap_horiz,
+                  size: 28,
+                  color: Styles.primary,
+                ),
+                style: IconButton.styleFrom(
+                  backgroundColor: Styles.primary.withValues(alpha: 0.1),
+                  padding: const EdgeInsets.all(14),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
 
+class _NavTab {
+  final int index;
+  final IconData icon;
+  final String route;
+
+  _NavTab({
+    required this.index,
+    required this.icon,
+    required this.route,
+  });
+}
+
 class BottomNavigationBarButton extends StatelessWidget {
   const BottomNavigationBarButton({
     super.key,
-    required this.selectedIndex, //what the user chose
-    required this.index, //i define which button user pressed so i can define selectedIndex
+    required this.selectedIndex,
+    required this.index,
     required this.onTap,
   });
 
@@ -96,18 +116,17 @@ class BottomNavigationBarButton extends StatelessWidget {
       label: Icon(icons[index], size: 28),
       style: ButtonStyle(
         elevation: WidgetStateProperty.all(selectedIndex == index ? 12 : 0),
-
         shadowColor: WidgetStateProperty.all(
           selectedIndex == index
-              ? const Color.fromARGB(255, 92, 85, 159).withAlpha(70)
+              ? Styles.primary.withValues(alpha: 0.27)
               : Colors.transparent,
         ),
         shape: WidgetStateProperty.all(const CircleBorder()),
         padding: WidgetStateProperty.all(const EdgeInsets.all(14)),
         backgroundColor: WidgetStateProperty.all(
           selectedIndex == index
-              ? Styles.mainColor
-              : Styles.mainColor.withAlpha(50),
+              ? Styles.primary
+              : Styles.primary.withValues(alpha: 0.2),
         ),
       ),
     );
