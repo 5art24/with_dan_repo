@@ -61,9 +61,25 @@ class _PlanningEventViewBodyState extends State<PlanningEventViewBody>
           final fieldWidth = constraints.maxWidth;
           final fieldHeight = 60.0;
           return Form(
-            child: BlocBuilder<EventPlanningCubit, EventPlanningState>(
+            child: BlocConsumer<EventPlanningCubit, EventPlanningState>(
+              listener: (BuildContext context, EventPlanningState state) {
+                if (state is EventReset) {
+                  _eventNameController.clear();
+                  _descriptionController.clear();
+                } else if (state is EventLoaded) {
+                  if (_eventNameController.text != state.event.name) {
+                    _eventNameController.text = state.event.name;
+                  }
+                  if (_descriptionController.text !=
+                      (state.event.description ?? '')) {
+                    _descriptionController.text = state.event.description ?? '';
+                  }
+                }
+              },
               builder: (context, state) {
-                if (state is EventLoaded || state is EventUpdated) {
+                if (state is EventLoaded ||
+                    state is EventUpdated ||
+                    state is EventReset) {
                   final cubit = context.read<EventPlanningCubit>();
                   final services = cubit.getServiceTypes();
 
@@ -164,7 +180,13 @@ class _PlanningEventViewBodyState extends State<PlanningEventViewBody>
                         ),
                       ),
                       const SizedBox(height: 10),
-                      ServicesGrid(services: services),
+                      AbsorbPointer(
+                        absorbing: !cubit.isEventDataComplete(),
+                        child: Opacity(
+                          opacity: cubit.isEventDataComplete() ? 1 : 0.4,
+                          child: ServicesGrid(services: services),
+                        ),
+                      ),
                       const SizedBox(height: 20),
                     ],
                   );

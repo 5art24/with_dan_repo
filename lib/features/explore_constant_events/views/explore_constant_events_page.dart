@@ -12,7 +12,7 @@ class ExploreConstantEventsPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => SearchCubit()),
-        BlocProvider(create: (context) => ExploreConstantEventsCubit())
+        BlocProvider(create: (context) => ExploreConstantEventsCubit()..loadEvents())
       ],
       child: Scaffold(body: ExploreConstantEventsBody()),
     );

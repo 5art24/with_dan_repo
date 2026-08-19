@@ -21,7 +21,7 @@ class MockServices {
         ),
       ],
       price: 200,
-      id: '',
+      id: 'lighting-1',
       imageUrl: [
         'https://picsum.photos/400/250',
         'https://picsum.photos/id/1015/400/300',
@@ -36,13 +36,13 @@ class MockServices {
       description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
     ),
     ServiceModel(
-      id: '',
+      id: 'lighting-2',
       bookings: [
         BookingRange(
           startDate: DateTime(2026, 3, 16),
@@ -51,6 +51,18 @@ class MockServices {
         BookingRange(
           startDate: DateTime(2026, 3, 10),
           endDate: DateTime(2026, 3, 10),
+        ),
+        BookingRange(
+          startDate: DateTime(2026, 3, 10),
+          endDate: DateTime(2026, 3, 10),
+        ),
+        BookingRange(
+          startDate: DateTime(2026, 8, 18),
+          endDate: DateTime(2026, 8, 21),
+        ),
+             BookingRange(
+          startDate: DateTime(2026, 8, 24),
+          endDate: DateTime(2026, 8, 27),
         ),
       ],
       name: "hi900,4",
@@ -63,11 +75,12 @@ class MockServices {
       provider: User(
         username: 'user2',
         urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
       ),
+      
     ),
     ServiceModel(
-      id: '',
+      id: 'lighting-3',
       bookings: [
         BookingRange(
           startDate: DateTime(2026, 3, 16),
@@ -86,10 +99,10 @@ class MockServices {
       type: ServiceType.lighting,
       description: "description",
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
     ),
   ];
 
@@ -116,10 +129,10 @@ class MockServices {
       type: ServiceType.venue,
       description: 'قصر فاخر مع حدائق ومواقف سيارات واسعة',
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
     ),
     ServiceModel(
       id: '2',
@@ -141,10 +154,10 @@ class MockServices {
       capacity: 200,
       type: ServiceType.venue,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       description: 'إطلالة بحرية ساحرة',
     ),
     ServiceModel(
@@ -169,7 +182,7 @@ class MockServices {
       provider: User(
         username: 'user1',
         urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
       ),
       description: 'أفخم القاعات مع خدمات راقية',
     ),
@@ -193,10 +206,10 @@ class MockServices {
       capacity: 150,
       type: ServiceType.venue,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       description: 'ديكورات زهور طبيعية',
     ),
     // DJs
@@ -220,10 +233,10 @@ class MockServices {
       capacity: 0,
       type: ServiceType.dj,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       description: 'متخصص في الأعراس والحفلات',
     ),
     ServiceModel(
@@ -244,10 +257,10 @@ class MockServices {
       price: 1800,
       location: 'جدة',
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       capacity: 0,
       type: ServiceType.dj,
       description: 'موسيقى حديثة وإضاءة',
@@ -269,10 +282,10 @@ class MockServices {
       rating: 4.9,
       price: 2500,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       location: 'الدمام',
       capacity: 0,
       type: ServiceType.dj,
@@ -297,10 +310,10 @@ class MockServices {
       location: 'مكة',
       capacity: 0,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       type: ServiceType.dj,
       description: 'أجواء هادئة ومناسبة',
     ),
@@ -323,10 +336,10 @@ class MockServices {
       price: 3000,
       location: 'الرياض',
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       capacity: 0,
       type: ServiceType.decor,
       description: 'ديكورات فاخرة',
@@ -350,10 +363,10 @@ class MockServices {
       location: 'جدة',
       capacity: 0,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       type: ServiceType.decor,
       description: 'تنسيق زهور وإضاءة',
     ),
@@ -376,10 +389,10 @@ class MockServices {
       location: 'الخبر',
       capacity: 0,
       provider: User(
-        username: 'user1',
-        urlImage:
-            "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-      ),
+          username: 'user1',
+          urlImage:
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+        ),
       type: ServiceType.decor,
       description: 'إضاءة مبتكرة وديكورات عصرية',
     ),

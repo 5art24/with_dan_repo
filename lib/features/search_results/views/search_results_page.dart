@@ -25,24 +25,37 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   late final TextEditingController _searchController;
   late final SearchCubit _searchCubit;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _searchController = TextEditingController(text: widget.initialQuery);
+  //   try {
+  //     _searchCubit = context.watch<SearchCubit>();
+  //   } catch (e) {
+  //     // إذا لم يكن موجوداً، ننشئ واحداً جديداً
+  //     _searchCubit = SearchCubit();
+  //   }
+  //   // 🔹 إذا كانت هناك نتائج أولية، استخدمها
+  //   if (widget.initialResults != null && widget.initialResults!.isNotEmpty) {
+  //     _searchCubit.emit(
+  //       SearchLoaded(
+  //         results: widget.initialResults!,
+  //         query: widget.initialQuery,
+  //       ),
+  //     );
+  //   } else {
+  //     _searchCubit.searchEvents(widget.initialQuery);
+  //   }
+  // }
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
-    try {
-      _searchCubit = context.watch<SearchCubit>();
-    } catch (e) {
-      // إذا لم يكن موجوداً، ننشئ واحداً جديداً
-      _searchCubit = SearchCubit();
-    }
-    // 🔹 إذا كانت هناك نتائج أولية، استخدمها
+    _searchCubit = context.read<SearchCubit>();
+
+    // 🟢 في حال وجود نتائج أولية، نمررها على الكيوبيت ليفلترها بحسب المدينة والمنطقة
     if (widget.initialResults != null && widget.initialResults!.isNotEmpty) {
-      _searchCubit.emit(
-        SearchLoaded(
-          results: widget.initialResults!,
-          query: widget.initialQuery,
-        ),
-      );
+      _searchCubit.setInitialResults(widget.initialResults!);
     } else {
       _searchCubit.searchEvents(widget.initialQuery);
     }

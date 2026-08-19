@@ -12,12 +12,16 @@ class ExploreConstantEventsInitial extends ExploreConstantEventsState {}
 class ExploreConstantEventsLoading extends ExploreConstantEventsState {}
 
 class ExploreConstantEventsLoaded extends ExploreConstantEventsState {
-  final List<ConstantEventModel> events;
-  
-  const ExploreConstantEventsLoaded(this.events);
-  
+  final List<ConstantEventModel> categoryEvents;
+  final List<ConstantEventModel> happeningSoonEvents;
+
+  const ExploreConstantEventsLoaded({
+    required this.categoryEvents,
+    required this.happeningSoonEvents,
+  });
+
   @override
-  List<Object?> get props => [events];
+  List<Object?> get props => [categoryEvents, happeningSoonEvents];
 }
 
 class ExploreConstantEventsError extends ExploreConstantEventsState {

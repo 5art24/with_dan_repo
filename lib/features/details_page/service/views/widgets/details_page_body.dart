@@ -77,7 +77,8 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
                       UnsupportedImages()
                     : DisplayingImages(
                         pageController: _pageController,
-                        primaryColor: primaryColor, imageUrls: imageUrls,
+                        primaryColor: primaryColor,
+                        imageUrls: imageUrls,
                       ),
 
                 // Service details content
@@ -119,7 +120,7 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          const Icon(Icons.star, color:  primaryColor, size: 20),
+                          const Icon(Icons.star, color: primaryColor, size: 20),
                           const SizedBox(width: 4),
                           Text(
                             widget.serviceModel.rating.toString(),
@@ -177,20 +178,20 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
                       ),
                       ServiceCalendarWidget(
                         bookings: widget.serviceModel.bookings ?? [],
-                        eventDate: currentEvent?.date, // ✅ تمرير تاريخ الفعالية
-                        preparationDays: widget
-                            .serviceModel
-                            .preparationDays, // ✅ تمرير أيام التجهيز
+                        eventDate: currentEvent?.startDate,
+                        eventEndDate: currentEvent?.endDate, // ✅ جديد
+                        preparationDays: widget.serviceModel.preparationDays,
                       ),
                       const SizedBox(height: 32),
 
                       SizedBox(
                         width: double.infinity,
                         child: DetailsCustomButton(
-                          isEnabled: isAvailable && currentEvent != null,
-                          onPressed: (isAvailable && currentEvent != null)
-                              ? () => _bookService()
-                              : null,
+                          isEnabled:
+                              isAvailable &&
+                              currentEvent != null, // فقط للتلوين/الشكل
+                          onPressed: () =>
+                              _onAddPressed(isAvailable, currentEvent),
                         ),
                       ),
                       SizedBox(height: 55),
@@ -205,42 +206,39 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
     );
   }
 
-  // ✅ دالة للتحقق من توفر الخدمة للفعالية
+  void _onAddPressed(bool isAvailable, dynamic currentEvent) {
+    if (currentEvent == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء اختيار فعالية أولاً')),
+      );
+      return;
+    }
+
+    if (!isAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'عذراً، الخدمة غير متوفرة في وقت تاريخ فعاليتك (خذ بعين الاعتبار أيام التجهيز المطلوبة قبل الفعالية).',
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    _bookService();
+  }
+
   bool _isServiceAvailableForEvent() {
     final eventCubit = context.read<EventPlanningCubit>();
     final currentEvent = eventCubit.currentEvent;
+    if (currentEvent == null) return false;
 
-    if (currentEvent == null) {
-      print('❌ No current event available');
-      return false;
-    }
-
-    final eventDate = currentEvent.date;
-    final preparationDays = widget.serviceModel.preparationDays;
-
-    print('📅 Checking availability for event date: $eventDate');
-    print('⚙️ Preparation days required: $preparationDays');
-
-    // قائمة الأيام للتحقق (أيام التجهيز + يوم الفعالية)
-    final daysToCheck = <DateTime>[eventDate];
-    for (int i = 1; i <= preparationDays; i++) {
-      daysToCheck.add(eventDate.subtract(Duration(days: i)));
-    }
-
-    print('📆 Days to check: ${daysToCheck.map((d) => '${d.day}/${d.month}')}');
-
-    // التحقق من كل يوم
-    for (var day in daysToCheck) {
-      for (var booking in widget.serviceModel.bookings ?? []) {
-        if (booking.contains(day)) {
-          print('❌ Day ${day.day}/${day.month} is booked');
-          return false;
-        }
-      }
-    }
-
-    print('✅ Service is available for the event date');
-    return true;
+    return widget.serviceModel.isAvailableForEvent(
+      eventStartDate: currentEvent.startDate,
+      eventEndDate: currentEvent.endDate,
+    );
   }
 
   // ✅ دالة لحجز الخدمة

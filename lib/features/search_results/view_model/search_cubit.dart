@@ -1,11 +1,66 @@
-// lib/features/search/cubit/search_cubit.dart
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/models/constant_event.dart';
 import 'package:project1_collage/features/search_results/view_model/search_state.dart';
 
 class SearchCubit extends Cubit<SearchState> {
   SearchCubit() : super(SearchInitial());
+
+  // 🟢 متغيرات الفلترة الخاصة بالموقع
+  String _selectedCity = '';
+  String _selectedArea = '';
+  String _lastQuery = '';
+  // 🟢 المتغير الجديد للتحكم بتفعيل الفلتر
+  bool _isLocationFilterEnabled = false;
+
+  // Getters للواجهات
+  String get selectedCity => _selectedCity;
+  String get selectedArea => _selectedArea;
+  bool get isLocationFilterEnabled => _isLocationFilterEnabled;
+
+
+  /// 🟢 تحديث city وتفريغ area
+  void updateCity(String city) {
+    _selectedCity = city;
+    _selectedArea = ''; // تفريغ المنطقة لتفادي التعارض
+    // تفعيل الفلتر تلقائياً عند تحديد مدينة، وتعطيله إذا تم إلغاؤها
+    _isLocationFilterEnabled = city.isNotEmpty;
+    _applySearchAndFilter();
+  }
+
+  /// 🟢 تحديث area
+  void updateArea(String area) {
+    _selectedArea = area;
+    if (area.isNotEmpty) {
+      _isLocationFilterEnabled = true;
+    }
+    _applySearchAndFilter();
+  }
+
+  void clearLocation() {
+    _selectedCity = '';
+    _selectedArea = '';
+    _isLocationFilterEnabled = false; // 👈 مهم جداً: إيقاف الفلتر عند المسح
+    _applySearchAndFilter();
+  }
+
+  /// 🟢 دالة التبديل (إن احتجتها)
+  void toggleLocationFilter() {
+    if (_isLocationFilterEnabled) {
+      clearLocation(); // عند إيقاف الفلتر نمسح القيم لكي يفتح BottomSheet في المرة القادمة
+    }
+  }
+
+  /// 🟢 صياغة نص الموقع للعرض
+  String getDisplayLocation() {
+    List<String> parts = [];
+    if (_selectedCity.isNotEmpty) parts.add(_selectedCity);
+    if (_selectedArea.isNotEmpty) parts.add(_selectedArea);
+
+    if (parts.isNotEmpty) {
+      return parts.join(" - ");
+    }
+    return "اختر الموقع من القائمة";
+  }
 
   // 🔹 بيانات البحث المحلية (Mock)
   final List<String> _allEvents = [
@@ -31,9 +86,49 @@ class SearchCubit extends Cubit<SearchState> {
     'Charity Gala',
   ];
 
-  // 🔹 البحث الكامل مع محاكاة API
+  // 🔹 تنفيذ البحث
   Future<void> searchEvents(String query) async {
-    if (query.trim().isEmpty) {
+    _lastQuery = query;
+    _applySearchAndFilter();
+  }
+
+  // 🟢 دالة لاستقبال النتائج الأولية وتطبيق الفلاتر الحالية عليها
+  void setInitialResults(List<ConstantEventModel> initialResults) {
+    final filtered = _applyCityAndAreaFilter(initialResults);
+
+    if (filtered.isEmpty) {
+      emit(SearchEmpty(query: ''));
+    } else {
+      emit(SearchLoaded(results: filtered, query: _lastQuery));
+    }
+  }
+
+  // 🟢 دالة مساعدة لفلترة أي قائمة بـ city و area
+  List<ConstantEventModel> _applyCityAndAreaFilter(
+    List<ConstantEventModel> list,
+  ) {
+    return list.where((event) {
+      if (_selectedCity.isNotEmpty &&
+          event.city.toLowerCase() != _selectedCity.toLowerCase()) {
+        return false;
+      }
+      if (_selectedArea.isNotEmpty &&
+          event.area.toLowerCase() != _selectedArea.toLowerCase()) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  // 🔹 تطبيق الفلترة بالاسم والموقع
+  Future<void> _applySearchAndFilter() async {
+    // 🟢 1. حساب هل يوجد فلتر موقع مفعل ونشط حالياً
+    final bool hasActiveLocationFilter =
+        _isLocationFilterEnabled &&
+        (_selectedCity.isNotEmpty || _selectedArea.isNotEmpty);
+
+    // 🟢 2. إذا لم يكن هناك نص بحث ولا فلتر موقع مفعل، نرجع حالة فارغة
+    if (_lastQuery.trim().isEmpty && !hasActiveLocationFilter) {
       emit(SearchEmpty());
       return;
     }
@@ -41,45 +136,61 @@ class SearchCubit extends Cubit<SearchState> {
     emit(SearchLoading());
 
     try {
-      // محاكاة تأخير الـ API
       await Future.delayed(const Duration(milliseconds: 200));
 
-      // محاكاة البحث المحلي
       final filtered = _allEvents
-          .where((event) => event.toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (event) =>
+                _lastQuery.isEmpty ||
+                event.toLowerCase().contains(_lastQuery.toLowerCase()),
+          )
           .toList();
 
-      final results = List.generate(
-        filtered.length > 0 ? filtered.length : 0,
-        (index) {
-          final name = filtered.isNotEmpty
-              ? filtered[index % filtered.length]
-              : 'No results';
-          return ConstantEventModel(
-            id: 'result_$index',
-            name: name,
-            accommodation: 100 + index * 50,
-            date: DateTime.now().add(Duration(days: index * 7)),
-            bookings: const [],
-            imageUrl: ['https://picsum.photos/200/200?random=$index'],
-            location: index % 2 == 0 ? 'New York, NY' : 'Los Angeles, CA',
-            type: index % 2 == 0 ? EventType.music : EventType.artistic,
-            description: 'Description for $name',
-          );
-        },
-      );
+      final results =
+          List.generate(filtered.length, (index) {
+            final name = filtered[index];
+            // مدن ومناطق وهمية للتجربة
+            final mockCities = ['syria', 'ksa', 'usa', 'uk'];
+            final mockAreas = ['damascus', 'riyadh', 'manhatan', 'london'];
+
+            return ConstantEventModel(
+              id: 'result_$index',
+              name: name,
+              accommodation: 100 + index * 50,
+              date: DateTime.now().add(Duration(days: index * 7)),
+              bookings: const [],
+              imageUrl: ['https://picsum.photos/200/200?random=$index'],
+              city: mockCities[index % mockCities.length],
+              area: mockAreas[index % mockAreas.length],
+              type: index % 2 == 0 ? EventType.music : EventType.artistic,
+              description: 'Description for $name',
+            );
+          }).where((event) {
+            // 🟢 3. تطبيق فلترة المدينة والمنطقة فقط إذا كان المفتاح مفعلاً (_isLocationFilterEnabled == true)
+            if (_isLocationFilterEnabled) {
+              if (_selectedCity.isNotEmpty &&
+                  event.city.toLowerCase() != _selectedCity.toLowerCase()) {
+                return false;
+              }
+              if (_selectedArea.isNotEmpty &&
+                  event.area.toLowerCase() != _selectedArea.toLowerCase()) {
+                return false;
+              }
+            }
+
+            return true; // إذا كان الفلتر معطلاً يُمرر كل العناصر
+          }).toList();
 
       if (results.isEmpty) {
-        emit(SearchEmpty(query: query));
+        emit(SearchEmpty(query: _lastQuery));
       } else {
-        emit(SearchLoaded(results: results, query: query));
+        emit(SearchLoaded(results: results, query: _lastQuery));
       }
     } catch (e) {
       emit(SearchError('Failed to search: $e'));
     }
   }
 
-  // 🔹 الحصول على اقتراحات البحث
   List<String> getSuggestions(String query) {
     if (query.isEmpty) return [];
     return _allEvents
@@ -87,8 +198,8 @@ class SearchCubit extends Cubit<SearchState> {
         .toList();
   }
 
-  // 🔹 مسح النتائج
   void clear() {
+    _lastQuery = '';
     emit(SearchInitial());
   }
 }

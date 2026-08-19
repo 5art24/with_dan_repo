@@ -7,6 +7,19 @@ enum Category { wedding, cultural, birthday, artistic }
 
 // core/constants/app_constants.dart
 class AppConstants {
+  
+  static const Map<String, List<String>> cityAreaMap = {
+    "syria":["damascus"],
+    "ksa":["riyadh"],
+    "usa":["manhatan"],
+    "uk":["london"],
+    "سوريا": ["دمشق", "حلب", "اللاذقية", "حمص", "حماة", "طرطوس"],
+    "السعودية": ["الرياض", "جدة", "مكة المكرمة", "الدمام", "المدينة المنورة"],
+    "الإمارات": ["دبي", "أبوظبي", "الشارقة", "العين"],
+    "مصر": ["القاهرة", "الإسكندرية", "الجيزة"],
+    "الأردن": ["عمان", "إربد", "الزرقاء"],
+  };
+  
   static final List<ServiceItem> allServices = [
     ServiceItem(
       service: ServiceModel(
@@ -37,7 +50,7 @@ class AppConstants {
         provider: User(
           username: 'user1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
         ),
       ),
       icon: "assets/icons/lighting.png",
@@ -70,7 +83,7 @@ class AppConstants {
         provider: User(
           username: 'user1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
         ),
       ),
       icon: "assets/icons/photograph.png",
@@ -104,7 +117,7 @@ class AppConstants {
         provider: User(
           username: 'user1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
         ),
       ),
       icon: "assets/icons/dj.png",
@@ -138,7 +151,7 @@ class AppConstants {
         provider: User(
           username: 'user1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
         ),
       ),
       icon: "assets/icons/venue.png",
@@ -173,7 +186,7 @@ class AppConstants {
         provider: User(
           username: 'user1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
         ),
       ),
     ),

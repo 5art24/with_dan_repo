@@ -1,16 +1,19 @@
-// features/home/views/widgets/add_task_bottom_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project1_collage/core/models/task.dart';
+import 'package:project1_collage/core/styles.dart';
+import 'package:flutter_slidable/flutter_slidable.dart'; // 🆕
 
 class AddTaskBottomSheet extends StatefulWidget {
   final Function(TaskModel) onTaskSaved;
   final String eventId;
+  final TaskModel? existingTask;
 
   const AddTaskBottomSheet({
     super.key,
     required this.onTaskSaved,
     required this.eventId,
+    this.existingTask,
   });
 
   @override
@@ -18,47 +21,110 @@ class AddTaskBottomSheet extends StatefulWidget {
 }
 
 class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
-  final newTask = TaskModel(eventId: '', id: '', title: '', dateTime: DateTime.now(), eventTitle: '');
-  final _titleController = TextEditingController();
-  bool _isDone = false;
-  DateTime _selectedDateTime = DateTime.now();
-  int _selectedPriority = 3;
+  bool get _isEditMode => widget.existingTask != null;
 
-  void _pickDateTime() async {
-    DateTime? pickedDate = await showDatePicker(
+  // 🆕 كل الحقول تُهيَّأ من existingTask إن وُجد (late تؤجل التقييم حتى يصبح widget جاهزًا)
+  late final _titleController = TextEditingController(
+    text: widget.existingTask?.title ?? '',
+  );
+
+  late bool _isDone = widget.existingTask?.isDone ?? false;
+
+  late DateTime _selectedDate =
+      widget.existingTask?.startDateTime ?? DateTime.now();
+
+  late TimeOfDay _startTime = widget.existingTask != null
+      ? TimeOfDay.fromDateTime(widget.existingTask!.startDateTime)
+      : TimeOfDay.now();
+
+  late TimeOfDay _endTime = widget.existingTask != null
+      ? TimeOfDay.fromDateTime(widget.existingTask!.endDateTime)
+      : TimeOfDay(
+          hour: (TimeOfDay.now().hour + 1) % 24,
+          minute: TimeOfDay.now().minute,
+        );
+
+  late int _selectedPriority = widget.existingTask?.priority ?? 3;
+
+
+  // 🗓️ اختيار التاريخ فقط
+  Future<void> _pickDate() async {
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedDateTime,
+      initialDate: _selectedDate,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
     );
 
     if (pickedDate != null) {
-      TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-      );
-
-      if (pickedTime != null) {
-        setState(() {
-          _selectedDateTime = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      }
+      setState(() {
+        _selectedDate = pickedDate;
+      });
     }
+  }
+
+  // ⏰ اختيار وقت البداية
+  Future<void> _pickStartTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime,
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startTime = picked;
+        // إذا أصبح وقت النهاية قبل وقت البداية، نزيد وقت النهاية تلقائياً بساعة
+        final startMinutes = _startTime.hour * 60 + _startTime.minute;
+        final endMinutes = _endTime.hour * 60 + _endTime.minute;
+        if (endMinutes <= startMinutes) {
+          _endTime = TimeOfDay(
+            hour: (_startTime.hour + 1) % 24,
+            minute: _startTime.minute,
+          );
+        }
+      });
+    }
+  }
+
+  // ⏰ اختيار وقت النهاية
+  Future<void> _pickEndTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _endTime,
+    );
+
+    if (picked != null) {
+      final startMinutes = _startTime.hour * 60 + _startTime.minute;
+      final pickedMinutes = picked.hour * 60 + picked.minute;
+
+      if (pickedMinutes <= startMinutes) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('End time must be after start time'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _endTime = picked;
+      });
+    }
+  }
+
+  // دالة مساعدة لتنسيق عرض TimeOfDay
+  String _formatTimeOfDay(TimeOfDay time) {
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return DateFormat('hh:mm a').format(dt);
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(
-          context,
-        ).viewInsets.bottom, // متجاوب مع لوحة المفاتيح
+        bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 20,
         right: 20,
         top: 20,
@@ -90,14 +156,13 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
             TextField(
               controller: _titleController,
               decoration: InputDecoration(
-                hintText: 'Work on the checkout prototype',
+                hintText: 'Title of the task',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            // حالة الإنجاز (Boolean Field)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -112,14 +177,15 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            // تحديد التاريخ والوقت
+
+            // 📅 اختيار التاريخ
             const Text(
-              'Due Date & Time',
+              'Date',
               style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             InkWell(
-              onTap: _pickDateTime,
+              onTap: _pickDate,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -132,16 +198,110 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      DateFormat(
-                        'yyyy-MM-dd  hh:mm a',
-                      ).format(_selectedDateTime),
-                    ),
+                    Text(DateFormat('yyyy-MM-dd').format(_selectedDate)),
                     const Icon(Icons.calendar_month, color: Colors.grey),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // ⏰ 2. واجهة اختيار مجال الوقت (Start Time & End Time)
+            const Text(
+              'Time Range',
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                // زر وقت البداية
+                Expanded(
+                  child: InkWell(
+                    onTap: _pickStartTime,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Start Time',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _formatTimeOfDay(_startTime),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.access_time,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // زر وقت النهاية
+                Expanded(
+                  child: InkWell(
+                    onTap: _pickEndTime,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'End Time',
+                            style: TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _formatTimeOfDay(_endTime),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.access_time_filled,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 20),
             // تحديد الأولوية (Priority)
             const Text(
@@ -160,7 +320,11 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                       label: Container(
                         alignment: Alignment.center,
                         child: Text(
-                          newTask.copyWith(priority: priority).priorityString,
+                          priority == 1
+                              ? 'High'
+                              : priority == 2
+                              ? 'Medium'
+                              : 'Low',
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black87,
                             fontWeight: FontWeight.bold,
@@ -171,8 +335,9 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                       selectedColor: Colors.deepPurpleAccent,
                       backgroundColor: Colors.grey.shade200,
                       onSelected: (selected) {
-                        if (selected)
+                        if (selected) {
                           setState(() => _selectedPriority = priority);
+                        }
                       },
                     ),
                   ),
@@ -180,36 +345,65 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            // زر الحفظ الثابت بالأسفل
+            // زر الحفظ
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(
-                    0xFF5C5CFF,
-                  ), // نفس لون الزر بالصورة
+                  backgroundColor: Styles.mainColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
                 ),
                 onPressed: () {
-                  if (_titleController.text.trim().isEmpty) return;
+                  // 1. التحقق من إدخال العنوان
+                  if (_titleController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter task title')),
+                    );
+                    return;
+                  }
 
-                  final newTask = TaskModel(
-                    id: DateTime.now().toString(),
-                    title: _titleController.text.trim(),
-                    isDone: _isDone,
-                    dateTime: _selectedDateTime,
-                    priority: _selectedPriority,
-                    eventId: widget.eventId, eventTitle: '',
+                  // 2. تركيب تاريخ ووقت البداية
+                  final startDateTime = DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    _selectedDate.day,
+                    _startTime.hour,
+                    _startTime.minute,
                   );
 
+                  // 3. تركيب تاريخ ووقت النهاية
+                  final endDateTime = DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    _selectedDate.day,
+                    _endTime.hour,
+                    _endTime.minute,
+                  );
+
+                  // 4. إنشاء كائن المهمة الجديدة
+                  final newTask = TaskModel(
+                    id: widget.existingTask?.id ??
+                        DateTime.now().toString(), // 🆕 نفس id عند التعديل
+                    title: _titleController.text.trim(),
+                    isDone: _isDone,
+                    dateTime: startDateTime,
+                    endDateTime: endDateTime,
+                    priority: _selectedPriority,
+                    eventId: widget.eventId,
+                    eventTitle: widget.existingTask?.eventTitle ?? '',
+                  );
+
+                  // 5. إرسال المهمة للواجهة الرئيسية إجباريّاً
                   widget.onTaskSaved(newTask);
+
+                  // 6. إغلاق الـ BottomSheet
                   Navigator.pop(context);
                 },
-                child: const Text(
-                  'Done',
+                child:  Text(
+                    _isEditMode ? 'Save Changes' : 'Done',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,

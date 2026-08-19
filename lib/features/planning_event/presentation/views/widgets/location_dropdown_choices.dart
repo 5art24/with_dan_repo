@@ -1,3 +1,5 @@
+// features/planning_event/presentation/views/widgets/location_dropdown_choices.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/styles.dart';
@@ -8,24 +10,30 @@ class LocationDropdownChoices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<EventPlanningCubit>();
+    final cubit = context.watch<EventPlanningCubit>();
+    final currentLocationType = cubit.getLocationType();
+
+    final items = const [
+      DropdownMenuItem(
+        value: "Venue You Choose",
+        child: Text("Venue You Choose (من الصالات)", style: Styles.body),
+      ),
+      DropdownMenuItem(
+        value: "By Country/City",
+        child: Text("By Country/City (من القائمة)", style: Styles.body),
+      ),
+    ];
+
     return DropdownButton<String>(
       isExpanded: true,
-      value: cubit.getLocationType(),
-      hint: Text("Select Location", style: Styles.body),
-      items: const [
-        DropdownMenuItem(
-          value: "Venue You Choose",
-          child: Text("Venue You Choose", style: Styles.body),
-        ),
-        DropdownMenuItem(
-          value: "Place You Choose by GPS",
-          child: Text("Place You Choose by GPS", style: Styles.body),
-        ),
-      ],
+      value: items.any((item) => item.value == currentLocationType)
+          ? currentLocationType
+          : "Venue You Choose",
+      hint: Text("اختر طريقة تحديد المكان", style: Styles.body),
+      items: items,
       onChanged: (val) {
         if (val != null) {
-          cubit.changeLocationType(val); // ✅ هذا سيؤدي إلى تحديث الخدمات تلقائياً
+          cubit.changeLocationType(val);
         }
       },
     );

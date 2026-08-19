@@ -19,74 +19,19 @@ class DisplayingSelectedServices extends StatefulWidget {
 
 class _DisplayingSelectedServicesState
     extends State<DisplayingSelectedServices> {
-  late List<ServiceModel> services;
   static const mainColor = Styles.mainColor;
-
-  // // قائمة تجريبية للخدمات المحجوزة
-  // List<ServiceModel> services = [
-  //   ServiceModel(
-  //     id: '1',
-  //     name: 'Lighting Service',
-  //     price: 200,
-  //     location: 'Syria',
-  //     rating: 3.0,
-  //     imageUrl: [],
-  //     bookings: null,
-  //     provider: User(
-  //       username: 'user1',
-  //       urlImage:
-  //           "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-  //     ),
-  //     type: ServiceType.lighting,
-  //     description: '',
-  //   ),
-  //   ServiceModel(
-  //     id: '2',
-  //     name: 'hi900,4 Lighting',
-  //     price: 900,
-  //     location: 'Syria',
-  //     rating: 4.0,
-  //     imageUrl: [],
-  //     bookings: null,
-  //     provider: User(
-  //       username: 'user1',
-  //       urlImage:
-  //           "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-  //     ),
-  //     type: ServiceType.lighting,
-  //     description: '',
-  //   ),
-  //   ServiceModel(
-  //     id: '3',
-  //     name: 'hi700,5 Light',
-  //     price: 700,
-  //     location: 'Syria',
-  //     rating: 5.0,
-  //     imageUrl: [],
-  //     bookings: null,
-  //     provider: User(
-  //       username: 'user1',
-  //       urlImage:
-  //           "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
-  //     ),
-  //     type: ServiceType.lighting,
-  //     description: '',
-  //   ),
-  // ];
 
   bool isSelectionMode = false;
   final Set<String> selectedServiceIds = {};
 
   @override
-  void initState() {
-    super.initState();
-    services = widget.event.bookedServices;
-  }
-
-  int get totalPrice => services.fold(0, (sum, item) => sum + item.price);
-
-  @override
   Widget build(BuildContext context) {
+    final cubit = context.read<EventPlanningCubit>();
+    final event = context.watch<EventPlanningCubit>().currentEvent!;
+
+    final eventDays = cubit.eventDurationInDays;
+    final services = event.bookedServices;
+    final totalPrice = services.fold(0, (sum, item) => sum + item.price*eventDays);
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FA),
       appBar: AppBar(
@@ -111,10 +56,8 @@ class _DisplayingSelectedServicesState
                   ),
                 ),
                 onPressed: () {
+                  cubit.removeServicesByIds(selectedServiceIds);
                   setState(() {
-                    services.removeWhere(
-                      (item) => selectedServiceIds.contains(item.id),
-                    );
                     selectedServiceIds.clear();
                     isSelectionMode = false;
                   });
@@ -126,7 +69,9 @@ class _DisplayingSelectedServicesState
           IconButton(
             icon: Icon(Icons.arrow_forward),
             onPressed: () {
-              GoRouter.of(context).push(AppRoutes.kAddTask, extra: {'event': widget.event});
+              GoRouter.of(
+                context,
+              ).push(AppRoutes.kAddTask, extra: context.read<EventPlanningCubit>());
             },
           ),
         ],
@@ -231,7 +176,9 @@ class _DisplayingSelectedServicesState
                             );
 
                             return ServiceCard(
+                              key: ValueKey(service.id),
                               service: service,
+                              eventDays: eventDays,
                               isSelectionMode: isSelectionMode,
                               isSelected: isSelected,
                               onSelectToggle: () {
@@ -244,12 +191,10 @@ class _DisplayingSelectedServicesState
                                 });
                               },
                               onTap: () {
-                                /*
-                                  GoRouter.of(context).push(
-                                    AppRoutes.kServiceDetails,
-                                    extra: {'service': service, 'cubit': cubit},
-                                  );
-                                  */
+                                GoRouter.of(context).push(
+                                  AppRoutes.kServiceDetails,
+                                  extra: {'service': service, 'cubit': cubit},
+                                );
                               },
                             );
                           }, childCount: services.length),
@@ -364,24 +309,27 @@ class _DisplayingSelectedServicesState
                         ),
                       ],
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.add_rounded,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          "Add / Modify Services",
-                          style: TextStyle(
-                            color: Colors.black38,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                    child: GestureDetector(
+                      onTap: () => GoRouter.of(context).pop(),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_rounded,
+                            size: 20,
+                            color: Colors.black54,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 6),
+                          Text(
+                            "Add / Modify Services",
+                            style: TextStyle(
+                              color: Colors.black38,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

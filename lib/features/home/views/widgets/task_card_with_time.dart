@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -10,28 +9,28 @@ class TaskCardWithTime extends StatelessWidget {
   final TaskModel task;
   final String eventName;
   final Color cardColor;
+  final ValueChanged<bool?> onStatusChanged;
+
   const TaskCardWithTime({
     super.key,
     required this.task,
     required this.eventName,
     required this.cardColor,
+    required this.onStatusChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-
-    final String startTimeStr = DateFormat('h:mm').format(task.dateTime);
-    final String endTimeStr = DateFormat(
-      'h:mm',
-    ).format(task.dateTime.add(const Duration(hours: 1)));
+    final String startTimeStr = DateFormat('h:mm').format(task.startDateTime);
+    final String endTimeStr = DateFormat('h:mm').format(
+      task.endDateTime ?? task.startDateTime.add(const Duration(hours: 1)),
+    );
     final String dayStr =
-        DateFormat('yyyy-MM-dd').format(task.dateTime) ==
+        DateFormat('yyyy-MM-dd').format(task.startDateTime) ==
             DateFormat('yyyy-MM-dd').format(DateTime.now())
         ? "Today"
-        : DateFormat('MMM d').format(task.dateTime);
-    final String exactTimeStr = DateFormat(
-      'h:mm a',
-    ).format(task.dateTime);
+        : DateFormat('MMM d').format(task.startDateTime);
+    final String exactTimeStr = DateFormat('h:mm a').format(task.startDateTime);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
@@ -39,7 +38,7 @@ class TaskCardWithTime extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-           //==================time bar=========================
+            //==================time bar=========================
             SizedBox(
               width: 55,
               child: Column(
@@ -128,12 +127,8 @@ class TaskCardWithTime extends StatelessWidget {
                           scale: 1.1,
                           child: Checkbox(
                             value: task.isDone,
-                            // 
-                            onChanged: (value) {
-                              context.read<TaskCubit>().toggleTaskCompletion(
-                                task,
-                              );
-                            },
+                            //
+                            onChanged: onStatusChanged,
                             activeColor: Colors.black87,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4),
@@ -164,7 +159,7 @@ class TaskCardWithTime extends StatelessWidget {
                             ),
                           ],
                         ),
-                       
+
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -199,7 +194,6 @@ class TaskCardWithTime extends StatelessWidget {
     );
   }
 }
-
 
 class DashedVerticalLine extends StatelessWidget {
   final Color color;

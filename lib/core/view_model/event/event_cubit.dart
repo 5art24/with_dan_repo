@@ -1,40 +1,66 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/models/base_event.dart';
-import 'package:project1_collage/core/widgets/mocks.dart';
-import 'package:project1_collage/features/home/models/displayed_event.dart';
+import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 
 part 'event_state.dart';
 
-// Cubit
 class EventCubit extends Cubit<EventState> {
-  EventCubit() : super(EventInitial()) {
+
+  final AuthCubit authCubit;
+  StreamSubscription? _authSubscription;
+
+  EventCubit(this.authCubit) : super(EventInitial()) {
+    // 1. تحميل الفعاليات عند البناء
     loadUpcomingEvents();
+
+    // 2. الاستماع لتحديثات AuthCubit فور تعديل أو حفظ أي فعالية
+    _authSubscription = authCubit.stream.listen((authState) {
+      if (authState is Authenticated) {
+        loadUpcomingEvents();
+      }
+    });
   }
 
-  Future<void> loadUpcomingEvents() async {
+  void loadUpcomingEvents() {
     emit(EventLoading());
     try {
-      ///////////////see delete 
-      final constantEvents = MockEventRepository.getConstantEvents();
-      final personalEvents = MockEventRepository.getPersonalEvents();
+      final user = authCubit.currentUser;
+
+      if (user == null) {
+        emit(EventError("لا يوجد مستخدم مسجل دخول"));
+        return;
+      }
 
       final now = DateTime.now();
       final todayStart = DateTime(now.year, now.month, now.day);
 
-      final allEvents = <BaseEvent>[
-        ...constantEvents,
-        ...personalEvents
+      // دمج الفعاليات الخاصة والعامة المضافة عند المستخدم
+      final allUserEvents = <BaseEvent>[
+        ...user.personalEvents,
+        ...user.constantEvents,
       ];
 
-      // future events
-      final upcoming = allEvents
-          .where((e) => e.date.isAfter(todayStart.subtract(const Duration(days: 1))))
-          .toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      // تصفية وترتيب الفعاليات القادمة من اليوم فصاعداً
+      final upcoming =
+          allUserEvents
+              .where(
+                (e) => e.startDate.isAfter(
+                  todayStart.subtract(const Duration(seconds: 1)),
+                ),
+              )
+              .toList()
+            ..sort((a, b) => a.startDate.compareTo(b.startDate));
 
       emit(EventLoaded(upcoming));
     } catch (e) {
-      emit(EventError(e.toString()));
+      emit(EventError("حدث خطأ أثناء تحميل الفعاليات: ${e.toString()}"));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription?.cancel();
+    return super.close();
   }
 }

@@ -39,7 +39,7 @@ class ServicesGrid extends StatelessWidget {
               // ✅ الانتقال إلى صفحة تصفح الخدمات (وليس صفحة التفاصيل)
               GoRouter.of(
                 context,
-              ).push(AppRoutes.kServicesBrowser);//, extra: cubit
+              ).push(AppRoutes.kServicesBrowser, extra: context.read<EventPlanningCubit>());//, extra: cubit
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

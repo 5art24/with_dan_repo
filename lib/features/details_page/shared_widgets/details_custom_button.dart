@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:project1_collage/core/styles.dart';
 
 class DetailsCustomButton extends StatelessWidget {
-    final bool isEnabled;
+  final bool isEnabled;
   final VoidCallback? onPressed;
   final String text;
-  
+
   const DetailsCustomButton({
     super.key,
     this.isEnabled = true,
@@ -15,26 +16,17 @@ class DetailsCustomButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: isEnabled ? onPressed : null,
-      // onPressed: () {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('Added to cart!')),
-      //   );
-      // },
+      onPressed: onPressed,
+
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green[700],
-        foregroundColor: Colors.white,
+        backgroundColor: isEnabled ? Styles.mainColor : Colors.grey.shade300,
+        foregroundColor: isEnabled ? Colors.white : Colors.grey.shade600,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: const Text(
-        'Add',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Text(
+        isEnabled ? 'Add to Event' : 'Not Available',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );
   }

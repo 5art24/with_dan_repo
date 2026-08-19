@@ -11,7 +11,6 @@ class ServicesBrowserPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
      final cubit = context.watch<EventPlanningCubit>();
-    //print(GoRouter.of(context).routeInformationProvider.value.location);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,11 +31,7 @@ class ServicesBrowserPage extends StatelessWidget {
         ),
       ),
       body:
-      //  BlocProvider.value(
-      //   value: cubit,
-      //   child: 
         const ServicesBrowserPageBody(),
-      // ),
     );
   }
 }

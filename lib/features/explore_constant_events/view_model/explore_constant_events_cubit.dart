@@ -10,44 +10,131 @@ class ExploreConstantEventsCubit extends Cubit<ExploreConstantEventsState> {
   // قائمة الفعاليات الكاملة
   final List<ConstantEventModel> _allEvents = _generateSampleEvents();
 
-  // الفعاليات المعروضة بعد الفلترة
+  // الفعاليات المعروضة في شبكة التصنيفات (Categories Grid)
   List<ConstantEventModel> _filteredEvents = [];
 
-  // الفلتر المحدد حالياً
+  // قائمة فعاليات Happening Soon (مفلترة بالموقع والتاريخ فقط)
+  List<ConstantEventModel> _happeningSoonEvents = [];
+
+  // الفلاتر المحددة
   String _selectedCategory = 'All';
+  String _selectedCity = '';
+  String _selectedArea = '';
 
   List<ConstantEventModel> get filteredEvents => _filteredEvents;
-  String get selectedCategory => _selectedCategory;
+  List<ConstantEventModel> get happeningSoonEvents => _happeningSoonEvents;
 
-  // تحميل البيانات الأولية
+  String get selectedCategory => _selectedCategory;
+  String get selectedCity => _selectedCity;
+  String get selectedArea => _selectedArea;
+
+  /// 🟢 تحميل البيانات أول مرة (يفلتر القائمتين معاً)
   void loadEvents() {
     emit(ExploreConstantEventsLoading());
     try {
-      _filteredEvents = List.from(_allEvents);
-      emit(ExploreConstantEventsLoaded(_filteredEvents));
+      _filterHappeningSoon();
+      _filterCategoryEvents();
+
+      // 🟢 إرسال القائمتين في الحالة
+      emit(
+        ExploreConstantEventsLoaded(
+          categoryEvents: _filteredEvents,
+          happeningSoonEvents: _happeningSoonEvents,
+        ),
+      );
     } catch (e) {
       emit(ExploreConstantEventsError(e.toString()));
     }
   }
 
-  // تغيير الفلتر وتحديث الفعاليات
+  /// ⚡ [تحسين الأداء]: عند تغيير التصنيف فقط -> يُعيد فلترة الفعاليات المصنفة دون مساس بـ Happening Soon
   void filterByCategory(String category) {
     if (_selectedCategory == category) return;
-
-    emit(ExploreConstantEventsLoading());
     _selectedCategory = category;
 
-    if (category == 'All') {
-      _filteredEvents = List.from(_allEvents);
-    } else {
-      // تحويل النص إلى EventType
-      final eventType = _getEventTypeFromString(category);
-      _filteredEvents = _allEvents
-          .where((event) => event.type == eventType)
-          .toList();
+    emit(ExploreConstantEventsLoading());
+    try {
+      _filterCategoryEvents(); // تنفيـذ سريـع جداً (بدون ترتيب Happening Soon)
+      emit(
+        ExploreConstantEventsLoaded(
+          categoryEvents: _filteredEvents,
+          happeningSoonEvents: _happeningSoonEvents,
+        ),
+      );
+    } catch (e) {
+      emit(ExploreConstantEventsError(e.toString()));
     }
+  }
 
-    emit(ExploreConstantEventsLoaded(_filteredEvents));
+  /// 🟢 عند تغيير الموقع -> يُعيد فلترة القائمتين لأن الموقع يؤثر على كليهما
+  void updateLocation(String city, String area) {
+    _selectedCity = city;
+    _selectedArea = area;
+
+    emit(ExploreConstantEventsLoading());
+    try {
+      _filterHappeningSoon();
+      _filterCategoryEvents();
+      emit(
+        ExploreConstantEventsLoaded(
+          categoryEvents: _filteredEvents,
+          happeningSoonEvents: _happeningSoonEvents,
+        ),
+      );
+    } catch (e) {
+      emit(ExploreConstantEventsError(e.toString()));
+    }
+  }
+
+  // ========================================================================
+  // 🟢 1. دالة مستقلة لفلترة وترتيب Happening Soon (تعتمد على الموقع والتاريخ فقط)
+  // ========================================================================
+  void _filterHappeningSoon() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    _happeningSoonEvents =
+        _allEvents.where((event) {
+            // شرط التاريخ
+            bool isFutureOrToday = !event.startDate.isBefore(today);
+
+            // شرط المدينة والمنطقة
+            bool matchesCity =
+                _selectedCity.isEmpty ||
+                event.city.toLowerCase().contains(_selectedCity.toLowerCase());
+
+            bool matchesArea =
+                _selectedArea.isEmpty ||
+                event.area.toLowerCase().contains(_selectedArea.toLowerCase());
+
+            return isFutureOrToday && matchesCity && matchesArea;
+          }).toList()
+          ..sort((a, b) => a.startDate.compareTo(b.startDate)); // ترتيب تصاعدي
+  }
+
+  // ========================================================================
+  // 🟢 2. دالة مستقلة لفلترة قائمة التصنيفات (تعتمد على التصنيف والموقع)
+  // ========================================================================
+  void _filterCategoryEvents() {
+    _filteredEvents = _allEvents.where((event) {
+      // شرط التصنيف
+      bool matchesCategory = true;
+      if (_selectedCategory != 'All') {
+        final eventType = _getEventTypeFromString(_selectedCategory);
+        matchesCategory = (event.type == eventType);
+      }
+
+      // شرط المدينة والمنطقة
+      bool matchesCity =
+          _selectedCity.isEmpty ||
+          event.city.toLowerCase().contains(_selectedCity.toLowerCase());
+
+      bool matchesArea =
+          _selectedArea.isEmpty ||
+          event.area.toLowerCase().contains(_selectedArea.toLowerCase());
+
+      return matchesCategory && matchesCity && matchesArea;
+    }).toList();
   }
 
   // تحويل النص إلى EventType
@@ -60,11 +147,10 @@ class ExploreConstantEventsCubit extends Cubit<ExploreConstantEventsState> {
       case 'workshop':
         return EventType.workshop;
       default:
-        return EventType.music; // قيمة افتراضية
+        return EventType.music;
     }
   }
 
-  // دالة مساعدة لتوليد بيانات وهمية
   static List<ConstantEventModel> _generateSampleEvents() {
     return List.generate(12, (index) {
       final types = [EventType.music, EventType.artistic, EventType.workshop];
@@ -83,7 +169,8 @@ class ExploreConstantEventsCubit extends Cubit<ExploreConstantEventsState> {
         'Digital Art',
         'Design Workshop',
       ];
-
+      final mockCities = ['syria', 'ksa', 'usa', 'uk'];
+      final mockAreas = ['damascus', 'riyadh', 'manhatan', 'london'];
       return ConstantEventModel(
         id: 'event_$index',
         name: names[index % names.length],
@@ -91,22 +178,21 @@ class ExploreConstantEventsCubit extends Cubit<ExploreConstantEventsState> {
         date: DateTime(2026, 12, 20 + index),
         bookings: const [],
         imageUrl: ['https://picsum.photos/seed/${index + 1}/200/200'],
-        location: ['New York', 'Los Angeles', 'Chicago', 'Miami'][index % 4],
+        city: mockCities[index % mockCities.length],
+        area: mockAreas[index % mockAreas.length],
         type: type,
         description: 'This is a ${type.name} event description...',
       );
     });
   }
 
-  // إضافة فعالية جديدة (للاستخدام المستقبلي)
   void addEvent(ConstantEventModel event) {
     _allEvents.add(event);
-    filterByCategory(_selectedCategory);
+    loadEvents();
   }
 
-  // حذف فعالية (للاستخدام المستقبلي)
   void removeEvent(String eventId) {
     _allEvents.removeWhere((event) => event.id == eventId);
-    filterByCategory(_selectedCategory);
+    loadEvents();
   }
 }

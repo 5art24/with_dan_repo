@@ -7,6 +7,17 @@ class BookingRange {
     required this.endDate,
   });
 
+  factory BookingRange.fromJson(Map<String, dynamic> json) {
+    return BookingRange(
+      startDate: json['start_date'] != null 
+          ? DateTime.parse(json['start_date']) 
+          : (json['startDate'] != null ? DateTime.parse(json['startDate']) : DateTime.now()),
+      endDate: json['end_date'] != null 
+          ? DateTime.parse(json['end_date']) 
+          : (json['endDate'] != null ? DateTime.parse(json['endDate']) : DateTime.now()),
+    );
+  }
+
   //To check if today falls within this reserved range
   bool contains(DateTime date) {
    // We filter the time (hours and minutes) for an accurate day-only comparison

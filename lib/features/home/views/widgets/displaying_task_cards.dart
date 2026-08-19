@@ -15,7 +15,7 @@
 //       itemBuilder: (context, index) {
 //         return TaskCardWithTime(
 //           task: TaskModel(
-            
+
 //             id: "10",
 //             title: "title",
 //             dateTime: DateTime(2020, 5, 24), eventId: 'event1', eventTitle: '',
@@ -70,8 +70,11 @@ class DisplayingTaskCards extends StatelessWidget {
 
               return TaskCardWithTime(
                 task: task,
-                eventName: task.eventTitle ,
+                eventName: task.eventTitle,
                 cardColor: cardColor,
+                onStatusChanged: (value) {
+                  context.read<TaskCubit>().toggleTaskCompletion(task);
+                },
               );
             },
           );

@@ -17,11 +17,8 @@ class ExploreConstantEventsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // تحميل البيانات عند بناء الـ Widget لأول مرة
-    // باستخدام BlocListener لتنفيذ الـ init مرة واحدة فقط
     return BlocListener<ExploreConstantEventsCubit, ExploreConstantEventsState>(
       listener: (context, state) {
-        // تنفيذ الـ init فقط إذا كانت الحالة Initial
         if (state is ExploreConstantEventsInitial) {
           context.read<ExploreConstantEventsCubit>().loadEvents();
         }
@@ -32,7 +29,7 @@ class ExploreConstantEventsBody extends StatelessWidget {
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ==============================search bar===============================
+              // ============================== search bar ===============================
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -63,7 +60,7 @@ class ExploreConstantEventsBody extends StatelessWidget {
                 ),
               ),
 
-              // Happening Soon header
+              // ============================== Happening Soon Section ===============================
               SliverToBoxAdapter(
                 child: SectionHeader(
                   title: "Happening Soon",
@@ -72,41 +69,60 @@ class ExploreConstantEventsBody extends StatelessWidget {
                 ),
               ),
 
-              // Horizontal List for Happening Soon event
+              // 🟢 [تعديل]: عرض فعاليات Happening Soon ديناميكياً حسب الحالة
               SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 240,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 5,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      ConstantEventModel event = ConstantEventModel(
-                        id: 'feat_$index',
-                        name: 'National Music Festival',
-                        accommodation: 500,
-                        date: DateTime(2026, 12, 24),
-                        bookings: const [],
-                        imageUrl: const ['https://picsum.photos/400/250'],
-                        location: 'GrandPark, New York',
-                        type: EventType.music,
-                        description: 'Festival description goes here...',
+                child: BlocBuilder<ExploreConstantEventsCubit, ExploreConstantEventsState>(
+                  builder: (context, state) {
+                    if (state is ExploreConstantEventsLoading) {
+                      return const SizedBox(
+                        height: 240,
+                        child: Center(child: CircularProgressIndicator()),
                       );
-                      return HappeningSoonEventCard(
-                        event: event,
-                        onTap: () => GoRouter.of(context).push(
-                          AppRoutes.kConstantEventDetails,
-                          extra: {'event': event},
+                    }
+
+                    if (state is ExploreConstantEventsLoaded) {
+                      final happeningSoonList = state.happeningSoonEvents;
+
+                      if (happeningSoonList.isEmpty) {
+                        return const SizedBox(
+                          height: 100,
+                          child: Center(
+                            child: Text(
+                              'No upcoming events in this location',
+                              style: TextStyle(color: Colors.grey, fontSize: 14),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return SizedBox(
+                        height: 240,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: happeningSoonList.length,
+                          physics: const BouncingScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final event = happeningSoonList[index];
+                            return HappeningSoonEventCard(
+                              event: event,
+                              onTap: () => GoRouter.of(context).push(
+                                AppRoutes.kConstantEventDetails,
+                                extra: {'event': event},
+                              ),
+                            );
+                          },
                         ),
                       );
-                    },
-                  ),
+                    }
+
+                    return const SizedBox.shrink();
+                  },
                 ),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // Categories filters
+              // ============================== Categories Section ===============================
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,8 +137,9 @@ class ExploreConstantEventsBody extends StatelessWidget {
                   ],
                 ),
               ),
-              
-              // ========== عرض الفعاليات المفلترة ==========
+
+              // ============================== Category Grid Section ===============================
+              // 🟢 [تعديل]: يقرأ categoryEvents مباشرة من state
               BlocBuilder<ExploreConstantEventsCubit, ExploreConstantEventsState>(
                 builder: (context, state) {
                   if (state is ExploreConstantEventsLoading) {
@@ -135,7 +152,7 @@ class ExploreConstantEventsBody extends StatelessWidget {
                       ),
                     );
                   }
-                  
+
                   if (state is ExploreConstantEventsError) {
                     return SliverToBoxAdapter(
                       child: Center(
@@ -149,9 +166,9 @@ class ExploreConstantEventsBody extends StatelessWidget {
                       ),
                     );
                   }
-                  
+
                   if (state is ExploreConstantEventsLoaded) {
-                    if (state.events.isEmpty) {
+                    if (state.categoryEvents.isEmpty) {
                       return const SliverToBoxAdapter(
                         child: Center(
                           child: Padding(
@@ -164,16 +181,15 @@ class ExploreConstantEventsBody extends StatelessWidget {
                         ),
                       );
                     }
-                    
+
                     return EventsGrid.sliver(
-                      events: state.events,
+                      events: state.categoryEvents,
                       crossAxisCount: 2,
                       spacing: 14,
                       padding: const EdgeInsets.only(top: 8),
                     );
                   }
-                  
-                  // حالة ExploreConstantEventsInitial - لا نعرض أي شيء حتى يقوم الـ BlocListener بتحميل البيانات
+
                   return const SliverToBoxAdapter(child: SizedBox.shrink());
                 },
               ),

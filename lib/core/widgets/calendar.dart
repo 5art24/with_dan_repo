@@ -5,12 +5,14 @@ import 'package:table_calendar/table_calendar.dart';
 
 class ServiceCalendarWidget extends StatefulWidget {
   final List<BookingRange>? bookings; // جعلها اختيارية تحسباً لعدم وجود حجوزات
-  final DateTime? eventDate; // ✅ تاريخ الفعالية (يوم واحد)
+  final DateTime? eventDate;
+  final DateTime? eventEndDate;
   final int preparationDays;
   const ServiceCalendarWidget({
     super.key,
     required this.bookings,
     this.eventDate,
+    this.eventEndDate,
     this.preparationDays = 0,
   });
 
@@ -126,30 +128,13 @@ class _ServiceCalendarWidgetState extends State<ServiceCalendarWidget> {
             ),
 
             calendarBuilders: CalendarBuilders(
-              defaultBuilder: (context, day, focusedDay) {
-                final isBooked = _isDayBooked(day);
-                final booking = _getBookingForDay(day);
+              defaultBuilder: (context, day, focusedDay) => _buildDayCell(day),
 
-                if (isBooked && booking != null) {
-                  // Determining the shape of the reservation based on its location
-                  final isStart = _isSameDay(day, booking.startDate);
-                  final isEnd = _isSameDay(day, booking.endDate);
-                  final isSingleDay = isStart && isEnd;
+              // ✅ نفس المنطق بالضبط، بدون أي شكل مميز لليوم — الـ range ما بينقطع
+              todayBuilder: (context, day, focusedDay) => _buildDayCell(day),
 
-                  return _buildBookedDayCell(day, isStart, isEnd, isSingleDay);
-                }
-
-                // available day
-                return _buildAvailableDayCell(day);
-              },
-
-              todayBuilder: (context, day, focusedDay) {
-                return _buildTodayCell(day);
-              },
-
-              outsideBuilder: (context, day, focusedDay) {
-                return _buildOutsideCell(day);
-              },
+              outsideBuilder: (context, day, focusedDay) =>
+                  _buildOutsideCell(day),
             ),
           ),
 
@@ -162,125 +147,61 @@ class _ServiceCalendarWidgetState extends State<ServiceCalendarWidget> {
     );
   }
 
-  // explain colors
-  Widget _buildLegend() {
-  return Wrap(
-    spacing: 16,
-    runSpacing: 8,
-    alignment: WrapAlignment.center,
-    children: [
-      // محجوز
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('Reserved', style: TextStyle(fontSize: 11)),
-        ],
-      ),
-      // متاح
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('Available', style: TextStyle(fontSize: 11)),
-        ],
-      ),
-      // اليوم
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('Today', style: TextStyle(fontSize: 11)),
-        ],
-      ),
-      // ✅ أيام التجهيز
-      if (widget.preparationDays > 0)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 16,
-              height: 16,
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text('Preparation (${widget.preparationDays} days)', 
-                style: const TextStyle(fontSize: 11)),
-          ],
-        ),
-      // ✅ يوم الفعالية متاح
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('Event Day (Available)', 
-              style: TextStyle(fontSize: 11)),
-        ],
-      ),
-      // ✅ يوم الفعالية غير متاح
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 16,
-            height: 16,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text('Event Day (Unavailable)', 
-              style: TextStyle(fontSize: 11)),
-        ],
-      ),
-    ],
-  );
-}
+  Widget _buildDayCell(DateTime day) {
+    // 1) أيام مدة الفعالية
+    if (_inRange(day, _eventStart, _eventEnd)) {
+      final conflict = _isDayBooked(day);
+      return _buildRangeDayCell(
+        day: day,
+        backgroundColor: conflict ? Colors.red : Colors.green,
+        textColor: Colors.white,
+        isStart: _isSameDay(_dateOnly(day), _eventStart!),
+        isEnd: _isSameDay(_dateOnly(day), _eventEnd!),
+      );
+    }
 
-  //Building day's booked cell
-  Widget _buildBookedDayCell(
-    DateTime day,
-    bool isStart,
-    bool isEnd,
-    bool isSingleDay,
-  ) {
+    // 2) أيام التجهيز
+    if (_inRange(day, _prepStart, _prepEnd)) {
+      final conflict = _isDayBooked(day);
+      return _buildRangeDayCell(
+        day: day,
+        backgroundColor: conflict ? Colors.red.shade300 : Colors.orange,
+        textColor: Colors.white,
+        isStart: _isSameDay(_dateOnly(day), _prepStart!),
+        isEnd: _isSameDay(_dateOnly(day), _prepEnd!),
+      );
+    }
+
+    // 3) حجوزات فعلية
+    final isBooked = _isDayBooked(day);
+    final booking = _getBookingForDay(day);
+    if (isBooked && booking != null) {
+      final isStart = _isSameDay(day, booking.startDate);
+      final isEnd = _isSameDay(day, booking.endDate);
+      return _buildBookedDayCell(day, isStart, isEnd, isStart && isEnd);
+    }
+
+    // 4) يوم عادي
+    return Center(
+      child: Text(
+        '${day.day}',
+        style: TextStyle(
+          color: Colors.grey[800],
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRangeDayCell({
+    required DateTime day,
+    required Color backgroundColor,
+    required Color textColor,
+    required bool isStart,
+    required bool isEnd,
+  }) {
+    final isSingleDay = isStart && isEnd;
     BorderRadius borderRadius = BorderRadius.zero;
 
     if (isSingleDay) {
@@ -303,14 +224,14 @@ class _ServiceCalendarWidgetState extends State<ServiceCalendarWidget> {
         horizontal: isSingleDay ? 4 : 0,
       ),
       decoration: BoxDecoration(
-        color: primaryColor,
+        color: backgroundColor,
         borderRadius: borderRadius,
       ),
       child: Center(
         child: Text(
           '${day.day}',
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -319,118 +240,134 @@ class _ServiceCalendarWidgetState extends State<ServiceCalendarWidget> {
     );
   }
 
-  // Building day's available cell
-  // Building day's available cell
-Widget _buildAvailableDayCell(DateTime day) {
-  final status = _getDayStatus(day);
-  
-  switch (status) {
-    case DayStatus.eventAvailable:
-      // ✅ يوم الفعالية والخدمة متاحة -> أخضر
-      return Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.green,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            '${day.day}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      );
-      
-    case DayStatus.eventUnavailable:
-      // ✅ يوم الفعالية والخدمة غير متاحة -> أحمر
-      return Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            '${day.day}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      );
-      
-    case DayStatus.preparation:
-      // ✅ أيام التجهيز -> برتقالي
-      return Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.orange,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            '${day.day}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      );
-      
-    case DayStatus.normal:
-    default:
-      // الأيام العادية
-      return Center(
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          child: Text(
-            '${day.day}',
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
-      );
+  // _buildBookedDayCell القديمة تصير مجرد نداء لهاي:
+  Widget _buildBookedDayCell(
+    DateTime day,
+    bool isStart,
+    bool isEnd,
+    bool isSingleDay,
+  ) {
+    return _buildRangeDayCell(
+      day: day,
+      backgroundColor: primaryColor,
+      textColor: Colors.white,
+      isStart: isStart,
+      isEnd: isEnd,
+    );
   }
-}
 
-  //Building today's current cell
-  Widget _buildTodayCell(DateTime day) {
-    return Center(
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: primaryColor.withOpacity(0.15),
-          shape: BoxShape.circle,
-          border: Border.all(color: primaryColor, width: 1.5),
-        ),
-        child: Center(
-          child: Text(
-            '${day.day}',
-            style: TextStyle(
-              color: primaryColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+  // explain colors
+  Widget _buildLegend() {
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        // محجوز
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            const Text('Reserved', style: TextStyle(fontSize: 11)),
+          ],
         ),
-      ),
+        // متاح
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('Available', style: TextStyle(fontSize: 11)),
+          ],
+        ),
+        // اليوم
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('Today', style: TextStyle(fontSize: 11)),
+          ],
+        ),
+        // ✅ أيام التجهيز
+        if (widget.preparationDays > 0)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: Colors.orange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Preparation (${widget.preparationDays} days)',
+                style: const TextStyle(fontSize: 11),
+              ),
+            ],
+          ),
+        // ✅ يوم الفعالية متاح
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('Event Day (Available)', style: TextStyle(fontSize: 11)),
+          ],
+        ),
+        // ✅ يوم الفعالية غير متاح
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Event Day (Unavailable)',
+              style: TextStyle(fontSize: 11),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -532,68 +469,28 @@ Widget _buildAvailableDayCell(DateTime day) {
     );
   }
 
-  // ✅ التحقق مما إذا كان اليوم هو يوم الفعالية
-  bool _isEventDay(DateTime day) {
-    if (widget.eventDate == null) return false;
-    return _isSameDay(day, widget.eventDate!);
-  }
+  DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  // ✅ التحقق مما إذا كان اليوم ضمن أيام التجهيز المطلوبة
-  bool _isPreparationDay(DateTime day) {
-    if (widget.eventDate == null || widget.preparationDays == 0) return false;
+  DateTime? get _eventStart =>
+      widget.eventDate != null ? _dateOnly(widget.eventDate!) : null;
 
-    final preparationStartDate = widget.eventDate!.subtract(
-      Duration(days: widget.preparationDays),
-    );
-    final preparationEndDate = widget.eventDate!.subtract(
-      const Duration(days: 1),
-    );
+  DateTime? get _eventEnd => widget.eventDate != null
+      ? _dateOnly(widget.eventEndDate ?? widget.eventDate!)
+      : null;
 
-    return day.isAfter(
-          preparationStartDate.subtract(const Duration(days: 1)),
-        ) &&
-        day.isBefore(preparationEndDate.add(const Duration(days: 1)));
-  }
+  DateTime? get _prepStart =>
+      (_eventStart != null && widget.preparationDays > 0)
+      ? _eventStart!.subtract(Duration(days: widget.preparationDays))
+      : null;
 
-  // ✅ التحقق مما إذا كانت الخدمة متاحة للفعالية (مع مراعاة أيام التجهيز)
-  bool _isServiceAvailableForEvent() {
-    if (widget.eventDate == null) return true; // لم يتم اختيار تاريخ بعد
+  DateTime? get _prepEnd => (_eventStart != null && widget.preparationDays > 0)
+      ? _eventStart!.subtract(const Duration(days: 1))
+      : null;
 
-    // قائمة كل الأيام التي نحتاج التحقق منها
-    final daysToCheck = <DateTime>[];
-
-    // أيام التجهيز
-    for (int i = 1; i <= widget.preparationDays; i++) {
-      daysToCheck.add(widget.eventDate!.subtract(Duration(days: i)));
-    }
-
-    // يوم الفعالية نفسه
-    daysToCheck.add(widget.eventDate!);
-
-    // التحقق من كل يوم
-    for (var day in daysToCheck) {
-      if (_isDayBooked(day)) {
-        return false; // يوجد يوم محجوز ضمن الفترة المطلوبة
-      }
-    }
-
-    return true; // كل الأيام المطلوبة متاحة
-  }
-
-  DayStatus _getDayStatus(DateTime day) {
-    final isEventDay = _isEventDay(day);
-    final isPreparationDay = _isPreparationDay(day);
-    final isBooked = _isDayBooked(day);
-
-    if (isEventDay) {
-      return isBooked ? DayStatus.eventUnavailable : DayStatus.eventAvailable;
-    }
-
-    if (isPreparationDay) {
-      return DayStatus.preparation;
-    }
-
-    return DayStatus.normal;
+  bool _inRange(DateTime day, DateTime? start, DateTime? end) {
+    if (start == null || end == null) return false;
+    final d = _dateOnly(day);
+    return !d.isBefore(start) && !d.isAfter(end);
   }
 
   // comparing days

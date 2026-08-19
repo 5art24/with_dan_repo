@@ -2,202 +2,209 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:project1_collage/core/constants.dart';
 import 'package:project1_collage/core/mock_services.dart';
 import 'package:project1_collage/core/models/booking_range.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
 import 'package:project1_collage/core/models/service.dart';
+import 'package:project1_collage/core/models/task.dart';
 import 'package:project1_collage/core/models/user.dart';
+import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 import 'package:project1_collage/features/planning_event/models/service_item.dart';
 import 'package:equatable/equatable.dart';
 
 part 'event_planning_state.dart';
 
 class EventPlanningCubit extends Cubit<EventPlanningState> {
-  //the current event that the user enters its info
+  bool _isEditing = false;
   PersonalEvent? _currentEvent;
   late ServiceType _selectedServiceType;
   late FilterType _selectedFilter;
+
+  // 🌍 إدارة نمط الموقع (القيم المتاحة: "Venue You Choose" أو "By Country/City")
+  String _locationType = "Venue You Choose";
+
   final List<ServiceModel> _venues = [];
   final List<ServiceModel> _djs = [];
   final List<ServiceModel> _decors = [];
   final List<ServiceModel> _photographs = [];
   final List<ServiceModel> _lightings = MockServices.lightings;
-  
-  // displayed services depending on filters
+
   List<ServiceModel> _displayedServices = [];
 
-  //========================Constructor and initial data========================
-  EventPlanningCubit() : super(EventPlanningInitial()) {
+  //======================== Constructor and Initial Data ========================
+  EventPlanningCubit() : super(const EventPlanningInitial()) {
     _selectedServiceType = ServiceType.venue;
     _selectedFilter = FilterType.none;
   }
-  
+  bool get isEditing => _isEditing;
+
   final List<ServiceModel> _allServices = MockServices.allServices;
 
-  //a new event is created with default values and the user will update it
   void startNewEvent() {
+    _isEditing = false;
     _currentEvent = PersonalEvent(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: '',
       category: '',
       date: DateTime.now(),
+      city: '', // 👈 التأكيد على إسناد قيمة نصية
+      area: '',
       bookedServices: [],
     );
-    emit(EventLoaded(_currentEvent!));
+    emit(EventLoaded(event: _currentEvent!));
+  }
+
+  //======================== Set Initial Event Handling ========================
+
+  /// 🟢 البحث عن الفعالية بوساطة ID داخل قائمة فعاليات المستخدم في AuthCubit وتعيينها كـ currentEvent
+  void setInitialEventById(String eventId, AuthCubit authCubit) {
+    // 1. الحصول على قائمة فعاليات المستخدم المسجل
+    final userEvents = authCubit.currentUser?.personalEvents ?? [];
+
+    try {
+      // 2. البحث عن الفعالية بالـ ID
+      final foundEvent = userEvents.firstWhere((event) => event.id == eventId);
+
+      // 3. تعيين الفعالية الحالية وإصدار الحالة
+      _currentEvent = foundEvent;
+      emit(EventLoaded(event: _currentEvent!));
+    } catch (e) {
+      // 4. في حال عدم العثور على الفعالية بالـ ID الممرر
+      emit(PersonalEventError(error: 'لم يتم العثور على الفعالية المطلوبة'));
+    }
+  }
+
+  /// 🟢 دالة اختيارية: تعيين الفعالية مباشرة إذا كان كائن PersonalEvent متوفراً لديك بالكامل
+  void setInitialEvent(PersonalEvent event) {
+    _currentEvent = event;
+    emit(EventLoaded(event: _currentEvent!));
+  }
+
+  void clearEvent() {
+    emit(const EventReset());
+    startNewEvent();
   }
 
   PersonalEvent? get currentEvent => _currentEvent;
   ServiceType get selectedServiceType => _selectedServiceType;
   FilterType get selectedFilter => _selectedFilter;
 
-  //=====================Location Handling========================
-  String? getLocationType() {
-    return _currentEvent?.locationType;
-  }
+  //===================== Location & Area Handling ========================
+  /// إرجاع طريقة اختيار المكان الحالية ("Venue You Choose" أو "By Country/City")
+  String getLocationType() => _locationType;
 
-  void changeLocationType(String locationType) {
+  /// تغيير طريقة اختيار المكان وتصفير القيم لمنع التعارض
+  void changeLocationType(String type) {
+    _locationType = type;
     if (_currentEvent != null) {
-      _currentEvent = _currentEvent!
-          .copyWith(locationType: locationType)
-          .clearLocation();
-      if (locationType == "Place You Choose by GPS") {
-        getCurrentLocation(); // ✅ سيتم استدعاء هذه الدالة للحصول على الموقع الحالي
-      }
-      emit(EventUpdated(_currentEvent!));
+      _currentEvent = _currentEvent!.copyWith(city: '', area: '');
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
-  //When locationType is "Venue You Choose", this function will be called to set the selected venue
-  void selectVenue(String venue) {
-    if (_currentEvent != null &&
-        _currentEvent!.locationType == "Venue You Choose") {
-      _currentEvent = _currentEvent!.copyWith(selectedVenue: venue);
-      emit(VenueSelected(venue));
+  /// 🟢 تحديث city (وتفريغ area لتفادي التعارض مع الخيارات الجديدة)
+  void updateCity(String city) {
+    if (_currentEvent != null) {
+      _currentEvent = _currentEvent!.copyWith(city: city, area: '');
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
-  // ✅ دالة محدثة: الحصول على الموقع عبر GPS
-  Future<void> getCurrentLocation() async {
-    if (_currentEvent?.locationType != "Place You Choose by GPS") return;
-
-    emit(GPSLoading());
-
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          emit(GPSError("الرجاء السماح للتطبيق بالوصول إلى الموقع"));
-          return;
-        }
-      }
-      if (permission == LocationPermission.deniedForever) {
-        emit(
-          GPSError(
-            "The location permission has denied forever. Please enable it from settings",
-          ),
-        );
-        return;
-      }
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        emit(GPSError("الرجاء تشغيل خدمة تحديد الموقع (GPS)"));
-        return;
-      }
-
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10), // ✅ إضافة timeout
-      );
-
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final address = _formatAddress(placemarks.first);
-        _currentEvent = _currentEvent!.copyWith(
-          gpsAddress: address,
-          latitude: position.latitude,  // ✅ حفظ الإحداثيات
-          longitude: position.longitude, // ✅ حفظ الإحداثيات
-        );
-        emit(GPSSuccess(address));
-        emit(EventUpdated(_currentEvent!));
-      } else {
-        emit(GPSError("تعذر تحديد العنوان"));
-      }
-    } catch (e) {
-      emit(GPSError("فشل في الحصول على الموقع: ${e.toString()}"));
+  /// 🟢 تحديث area المحددة من القائمة الفرعية
+  void updateArea(String area) {
+    if (_currentEvent != null) {
+      _currentEvent = _currentEvent!.copyWith(area: area);
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
-  // ✅ دالة مساعدة لتنسيق العنوان (مضافة)
-  String _formatAddress(Placemark placemark) {
-    List<String> parts = [];
-    if (placemark.street != null && placemark.street!.isNotEmpty) 
-      parts.add(placemark.street!);
-    if (placemark.locality != null && placemark.locality!.isNotEmpty) 
-      parts.add(placemark.locality!);
-    if (placemark.administrativeArea != null && placemark.administrativeArea!.isNotEmpty) 
-      parts.add(placemark.administrativeArea!);
-    if (placemark.country != null && placemark.country!.isNotEmpty) 
-      parts.add(placemark.country!);
-    if (placemark.postalCode != null && placemark.postalCode!.isNotEmpty) 
-      parts.add(placemark.postalCode!);
-    
-    return parts.join(', ');
-  }
-
-  // ✅ دالة جديدة: تحديث الموقع يدوياً (عند اختيار المستخدم موقع عبر الخريطة)
-  void updateGPSLocation(String newAddress, double? lat, double? lng) {
-    if (_currentEvent != null && _currentEvent!.locationType == "Place You Choose by GPS") {
-      _currentEvent = _currentEvent!.copyWith(
-        gpsAddress: newAddress,
-        latitude: lat,
-        longitude: lng,
-      );
-      emit(GPSSuccess(newAddress));
-      emit(EventUpdated(_currentEvent!));
+  /// 🟢 اختيار القاعة من كروت الخدمات وحفظ اسمها في area
+  void selectVenue(String venueName) {
+    if (_currentEvent != null) {
+      _currentEvent = _currentEvent!.copyWith(area: venueName);
+      emit(VenueSelected(venue: venueName));
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
-  //with dropdown menu
+  /// 🟢 إرجاع القيم المحددة حالياً (Getters مفيدة للواجهات)
+  String getSelectedCity() => _currentEvent?.city ?? '';
+  String getSelectedArea() => _currentEvent?.area ?? '';
+
+  /// 🟢 صياغة نص الموقع للعرض في الواجهة (مثل: "السعودية - الرياض")
   String getDisplayLocation() {
-    if (_currentEvent == null) return "اختر طريقة تحديد المكان أولاً";
-    
-    if (_currentEvent!.locationType == "Venue You Choose") {
-      return _currentEvent!.selectedVenue ?? "لم يتم اختيار صالة بعد";
-    } else if (_currentEvent!.locationType == "Place You Choose by GPS") {
-      return _currentEvent!.gpsAddress ?? "جاري الحصول على الموقع...";
+    if (_currentEvent == null) return "لم يتم تحديد المكان بعد";
+
+    List<String> parts = [];
+
+    // 🛡️ استخدام ?. وتأكيد القراءة بأمان
+    final city = _currentEvent!.city;
+    final area = _currentEvent!.area;
+
+    if (city.isNotEmpty) parts.add(city);
+    if (area.isNotEmpty) parts.add(area);
+
+    if (parts.isNotEmpty) {
+      return parts.join(" - ");
     }
-    
-    return "اختر طريقة تحديد المكان أولاً";
+
+    return _locationType == "By Country/City"
+        ? "اختر الموقع من القائمة"
+        : "اختر صالة من قسم الخدمات";
   }
-  //=====================End of Location Handling========================
 
-  //=====================Edit Event Info========================
+  /// 🟢 التحقق من صحة واكتمال بيانات الموقع
+  bool isLocationValid() {
+    if (_currentEvent == null) return false;
+    if (_locationType == "By Country/City") {
+      return _currentEvent!.city.isNotEmpty && _currentEvent!.area.isNotEmpty;
+    } else {
+      return _currentEvent!.area.isNotEmpty;
+    }
+  }
 
-  //load an existing event to edit it
+  /// 🟢 مسح المكان المحدد بالكامل
+  void clearLocation() {
+    if (_currentEvent != null) {
+      _currentEvent = _currentEvent!.copyWith(city: '', area: '');
+      emit(EventUpdated(event: _currentEvent!));
+    }
+  }
+
+  //===================== Edit Event Info ========================
   void loadEvent(PersonalEvent event) {
+    _isEditing = true;
     _currentEvent = event;
-    emit(EventLoaded(event));
+
+    // 🟢 تحديد نمط الموقع تلقائياً بناءً على بيانات الفعالية المحملة
+    if (event.city.isNotEmpty) {
+      _locationType = "By Country/City";
+    } else {
+      _locationType = "Venue You Choose";
+    }
+
+    emit(EventLoaded(event: event));
+  }
+
+  // Helper Function لحساب التقدم
+  double calculateEventProgress(List<TaskModel> tasks) {
+    if (tasks.isEmpty) return 0.0;
+    final completedCount = tasks.where((t) => t.isDone).length;
+    return completedCount / tasks.length;
   }
 
   void updateEventName(String name) {
     if (_currentEvent != null) {
       _currentEvent = _currentEvent!.copyWith(name: name);
-      emit(EventUpdated(_currentEvent!));
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
   void updateDescription(String description) {
     if (_currentEvent != null) {
       _currentEvent = _currentEvent!.copyWith(description: description);
-      emit(EventUpdated(_currentEvent!));
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
@@ -208,15 +215,43 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
   void updateCategory(String category) {
     if (_currentEvent != null) {
       _currentEvent = _currentEvent!.copyWith(category: category);
-      emit(EventUpdated(_currentEvent!));
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
   void updateDate(DateTime date) {
     if (_currentEvent != null) {
-      _currentEvent = _currentEvent!.copyWith(date: date);
-      emit(EventUpdated(_currentEvent!));
+      _currentEvent = _currentEvent!.copyWith(date: date, endDate: date);
+      emit(EventUpdated(event: _currentEvent!));
     }
+  }
+
+  // 🆕 أضف هنا:
+  void updateEndDate(DateTime endDate) {
+    if (_currentEvent != null) {
+      if (endDate.isBefore(_currentEvent!.startDate)) {
+        emit(
+          PersonalEventError(
+            error: "تاريخ النهاية لا يمكن أن يسبق تاريخ البداية",
+          ),
+        );
+        return; // 🛑 لا يُطبَّق التحديث إطلاقًا
+      }
+      _currentEvent = _currentEvent!.copyWith(endDate: endDate);
+      emit(EventUpdated(event: _currentEvent!));
+    }
+  }
+
+  bool isDateRangeValid() {
+    if (_currentEvent == null) return false;
+    return !_currentEvent!.endDate!.isBefore(_currentEvent!.startDate);
+  }
+
+  int get eventDurationInDays {
+    if (_currentEvent == null) return 1;
+    final days =
+        _currentEvent!.endDate!.difference(_currentEvent!.startDate).inDays + 1;
+    return days < 1 ? 1 : days;
   }
 
   void addService(ServiceModel service) {
@@ -224,65 +259,93 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
       final currentServices = List<ServiceModel>.from(
         _currentEvent!.bookedServices,
       );
-      if (!currentServices.any((s) => s.name == service.name)) {
+      if (!currentServices.any((s) => s.id == service.id)) {
         currentServices.add(service);
         _currentEvent = _currentEvent!.copyWith(
           bookedServices: currentServices,
         );
-        emit(EventUpdated(_currentEvent!));
+        emit(EventUpdated(event: _currentEvent!));
+      } else {
+        emit(
+          ServiceAlreadyBooked(serviceName: service.name),
+        ); // 👈 وصلنا الحالة الميتة أخيرًا
       }
     }
   }
 
-  void removeService(ServiceModel service) {
+  // 🆕 دالة جديدة للحذف الجماعي (تصدر emit واحد بدل تكراره)
+  void removeServicesByIds(Set<String> serviceIds) {
     if (_currentEvent != null) {
       final currentServices = List<ServiceModel>.from(
         _currentEvent!.bookedServices,
-      );
-      currentServices.removeWhere((s) => s.name == service.name);
+      )..removeWhere((s) => serviceIds.contains(s.id));
       _currentEvent = _currentEvent!.copyWith(bookedServices: currentServices);
-      emit(EventUpdated(_currentEvent!));
+      emit(EventUpdated(event: _currentEvent!));
     }
   }
 
   Future<void> bookService(ServiceModel service) async {
     if (_currentEvent != null) {
-      emit(EventLoading());
+      emit(const EventLoading());
 
       await Future.delayed(const Duration(seconds: 1));
 
       addService(service);
-      emit(ServiceBookedSuccess(service.name, _currentEvent!));
+      emit(
+        ServiceBookedSuccess(serviceName: service.name, event: _currentEvent!),
+      );
     }
   }
 
-  Future<void> saveEvent() async {
-    if (_currentEvent != null) {
-      emit(EventLoading());
-
-      await Future.delayed(const Duration(seconds: 1));
-
-      emit(EventSavedSuccess(_currentEvent!));
-    }
+  // 1️⃣ التحقق من صحة التاريخ
+  bool isDateValid() {
+    final date = currentEvent?.startDate;
+    return date != null;
   }
 
-  bool isVenueServiceVisible() {
-    return _currentEvent?.locationType == "Venue You Choose";
+  // 3️⃣ التحقق من اكتمال كافة البيانات الإلزامية
+  bool isEventDataComplete() {
+    if (currentEvent == null) return false;
+
+    final isNameValid = currentEvent!.name.trim().isNotEmpty;
+    final isCategoryValid = currentEvent!.category.trim().isNotEmpty;
+    final isDateComplete = isDateValid();
+    final isLocationComplete = isLocationValid();
+    final isDateRangeComplete = isDateRangeValid(); // 🆕 هذا السطر يُضاف هنا
+
+    return isNameValid &&
+        isCategoryValid &&
+        isDateComplete &&
+        isLocationComplete &&
+        isDateRangeComplete; // 🆕 و هذا يُضاف هنا بنهاية شرط الـ return
+  }
+
+  // 4️⃣ حفظ الفعالية
+  void saveEvent() async {
+    if (!isEventDataComplete()) {
+      emit(
+        PersonalEventError(
+          error:
+              "يرجى ملء جميع الحقول الإلزامية: الاسم، النوع، التاريخ، والمكان.",
+        ),
+      );
+      return;
+    }
+
+    try {
+      emit(const EventLoading());
+      // await _eventRepository.save(currentEvent!);
+      emit(EventSavedSuccess(event: currentEvent!));
+    } catch (e) {
+      emit(PersonalEventError(error: "حدث خطأ أثناء الحفظ: ${e.toString()}"));
+    }
   }
 
   List<ServiceItem> getServiceTypes() {
-    List<ServiceItem> displayedServices = List.from(AppConstants.allServices);
-    if (_currentEvent?.locationType != "Venue You Choose") {
-      displayedServices.removeWhere(
-        (service) => service.service.name == "Venue",
-      );
-    }
-    return displayedServices;
+    return List.from(AppConstants.allServices);
   }
 
-  //=====================End of Edit Event Info========================
-
-  //=====================Displaying Services Logic========================
+  //===================== Displaying Services Logic ========================
 
   void changeServiceType(ServiceType type) {
     if (_selectedServiceType != type) {
@@ -291,9 +354,10 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
       _displayedServices = gettingServicesDependingOnType();
       emit(
         ServicesFilterChanged(
-          _selectedServiceType,
-          _selectedFilter,
-          _displayedServices,
+          event: currentEvent!,
+          selectedType: _selectedServiceType,
+          selectedFilter: _selectedFilter,
+          services: _displayedServices,
         ),
       );
     }
@@ -316,9 +380,10 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
       }
       emit(
         ServicesFilterChanged(
-          _selectedServiceType,
-          _selectedFilter,
-          _displayedServices,
+          event: currentEvent!,
+          selectedType: _selectedServiceType,
+          selectedFilter: _selectedFilter,
+          services: _displayedServices,
         ),
       );
     }
@@ -361,5 +426,53 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
       case FilterType.minPrice:
         return 'Min Price';
     }
+  }
+
+  //===================== Tasks logic ========================
+
+  void addTask(TaskModel newTask) {
+    if (_currentEvent == null) return;
+
+    final updatedTasks = List<TaskModel>.from(_currentEvent!.tasks)
+      ..add(newTask);
+    _currentEvent = _currentEvent!.copyWith(tasks: updatedTasks);
+
+    emit(EventUpdated(event: _currentEvent!));
+  }
+
+  // 🆕 تعديل مهمة موجودة والاحتفاظ بالتغييرات
+  void updateTask(TaskModel updatedTask) {
+    if (_currentEvent == null) return;
+
+    final updatedTasks = _currentEvent!.tasks.map((task) {
+      return task.id == updatedTask.id ? updatedTask : task;
+    }).toList();
+
+    _currentEvent = _currentEvent!.copyWith(tasks: updatedTasks);
+    emit(EventUpdated(event: _currentEvent!));
+  }
+
+  // 🆕 حذف مهمة من الفعالية
+  void deleteTask(String taskId) {
+    if (_currentEvent == null) return;
+
+    final updatedTasks = List<TaskModel>.from(_currentEvent!.tasks)
+      ..removeWhere((task) => task.id == taskId);
+
+    _currentEvent = _currentEvent!.copyWith(tasks: updatedTasks);
+    emit(EventUpdated(event: _currentEvent!));
+  }
+
+  // ✅ تم إصلاحها: تعتمد على _currentEvent مباشرة بدل فحص نوع state،
+  // وتُحدّث _currentEvent قبل emit لضمان تزامن البيانات مع الواجهة
+  void toggleTaskStatus(String taskId) {
+    if (_currentEvent == null) return;
+
+    final updatedTasks = _currentEvent!.tasks.map((task) {
+      return task.id == taskId ? task.copyWith(isDone: !task.isDone) : task;
+    }).toList();
+
+    _currentEvent = _currentEvent!.copyWith(tasks: updatedTasks);
+    emit(EventUpdated(event: _currentEvent!));
   }
 }

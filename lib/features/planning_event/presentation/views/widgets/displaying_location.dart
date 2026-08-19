@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/widgets/city_area_dropdown_selector.dart';
 import 'package:project1_collage/features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart';
-import 'package:project1_collage/features/planning_event/presentation/views/widgets/gps_location_picker.dart';
 
 class DisplayingLocation extends StatelessWidget {
   final String location;
@@ -14,14 +14,23 @@ class DisplayingLocation extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.watch<EventPlanningCubit>();
     final locationType = cubit.getLocationType();
-    
-    // ✅ إذا كان نوع الموقع "Place You Choose by GPS" اعرض واجهة GPS
-    if (locationType == "Place You Choose by GPS") {
-      return const GPSLocationPicker();
+    final event = cubit.currentEvent;
+
+    // 1️⃣ حالة الاختيار القائم على القائمة (City -> Area)
+    if (locationType == "By Country/City") {
+      // في صفحة تخطيط الفعالية
+      return CityAreaDropdownSelector(
+        selectedCity: cubit.getSelectedCity(),
+        selectedArea: cubit.getSelectedArea(),
+        onCityChanged: (city) => cubit.updateCity(city),
+        onAreaChanged: (area) => cubit.updateArea(area),
+      );
     }
 
-    // ✅ إذا كان نوع الموقع "Venue You Choose" وتم اختيار صالة
+    // 2️⃣ حالة اختيار صالة من الخدمات (Venue You Choose)
     if (locationType == "Venue You Choose") {
+      final hasVenue = event?.area.isNotEmpty ?? false;
+
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -34,8 +43,12 @@ class DisplayingLocation extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                location == "اختر طريقة تحديد المكان أولاً" ? "لم يتم اختيار صالة بعد" : location,
-                style: Styles.body,
+                hasVenue
+                    ? "الصالة المختارة: ${event!.area}"
+                    : "لم يتم اختيار صالة من قسم الخدمات بعد",
+                style: Styles.body.copyWith(
+                  color: hasVenue ? Colors.black : Colors.grey,
+                ),
               ),
             ),
           ],
@@ -43,25 +56,6 @@ class DisplayingLocation extends StatelessWidget {
       );
     }
 
-    // حالة افتراضية
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.location_off, color: Colors.grey),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              location,
-              style: Styles.body.copyWith(color: Colors.grey),
-            ),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox();
   }
 }

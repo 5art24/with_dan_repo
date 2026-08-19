@@ -1,6 +1,11 @@
 // lib/features/explore_constant_events/views/widgets/search_bar.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/widgets/city_area_dropdown_selector.dart';
+import 'package:project1_collage/features/explore_constant_events/view_model/explore_constant_events_cubit.dart';
+import 'package:project1_collage/features/search_results/view_model/search_cubit.dart';
+import 'package:project1_collage/features/search_results/view_model/search_state.dart';
 
 class EventsSearchBar extends StatefulWidget {
   final Function(String)? onSearch;
@@ -66,7 +71,7 @@ class _EventsSearchBarState extends State<EventsSearchBar> {
   void _triggerSearch() {
     final query = _searchController.text.trim();
     if (query.isNotEmpty) {
-      widget.onSearch?.call(query); // فقط الـ callback
+      widget.onSearch?.call(query);
     }
   }
 
@@ -76,11 +81,51 @@ class _EventsSearchBarState extends State<EventsSearchBar> {
       _hasText = false;
     });
     widget.onTextChanged?.call('');
-    
-    // استدعاء onClear المخصص
+
     if (widget.onClear != null) {
       widget.onClear!();
     }
+  }
+
+  // 🟢 دالة فتح الـ Bottom Sheet
+  void _showLocationBottomSheet(BuildContext context) {
+    final searchCubit = context.read<SearchCubit>();
+    final exploreCubit = context.read<ExploreConstantEventsCubit>();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (modalContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return CityAreaDropdownSelector(
+              selectedCity: searchCubit.selectedCity,
+              selectedArea: searchCubit.selectedArea,
+              onCityChanged: (city) {
+                setModalState(() {
+                  searchCubit.updateCity(city);
+                  exploreCubit.updateLocation(
+                    searchCubit.selectedCity,
+                    searchCubit.selectedArea,
+                  );
+                });
+              },
+              onAreaChanged: (area) {
+                setModalState(() {
+                  searchCubit.updateArea(area);
+                  exploreCubit.updateLocation(
+                    searchCubit.selectedCity,
+                    searchCubit.selectedArea,
+                  );
+                });
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -130,23 +175,37 @@ class _EventsSearchBarState extends State<EventsSearchBar> {
                   onPressed: _clearText,
                 ),
               if (widget.showLocationButton)
-                GestureDetector(
-                  onTap: () {
-                    // TODO: تنفيذ اختيار الموقع
+                BlocBuilder<SearchCubit, SearchState>(
+                  builder: (context, state) {
+                    final searchCubit = context.read<SearchCubit>();
+                    final exploreCubit = context.read<ExploreConstantEventsCubit>();
+                    
+                    // 🟢 يكون الفلتر مفعل إذا كان المبدال مفعلاً وهناك مدينة مختارة
+                    final isFilterActive = searchCubit.isLocationFilterEnabled && 
+                                           searchCubit.selectedCity.isNotEmpty;
+
+                    return IconButton(
+                      icon: Icon(
+                        Icons.location_on,
+                        color: isFilterActive
+                            ? Styles.mainColor
+                            : Colors.grey.shade400,
+                      ),
+                      tooltip: isFilterActive ? 'إلغاء الفلتر' : 'تحديد موقع',
+                      onPressed: () {
+                        if (isFilterActive) {
+                          // 🔴 1. إذا كان الفلتر مفعل وضغطنا عليه:
+                          // نمسح الموقع ونعطله لتعود البيانات غير مفلترة ويصبح الزر رمادياً
+                          searchCubit.clearLocation();
+                          exploreCubit.updateLocation('', '');
+                        } else {
+                          // 🟢 2. إذا كان الفلتر غير مفعل (رمادي) وضغطنا عليه:
+                          // نفتح دائماً الـ Bottom Sheet لإتاحة اختيار جديد
+                          _showLocationBottomSheet(context);
+                        }
+                      },
+                    );
                   },
-                  child: Container(
-                    margin: const EdgeInsets.all(6),
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Styles.mainColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.location_on_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
                 ),
             ],
           ),
