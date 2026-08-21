@@ -1,8 +1,9 @@
 // core/widgets/city_area_dropdown_selector.dart
 
 import 'package:flutter/material.dart';
-import 'package:project1_collage/core/constants.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/view_model/location/location_cubit.dart';
 
 class CityAreaDropdownSelector extends StatelessWidget {
   final String? selectedCity;
@@ -20,12 +21,28 @@ class CityAreaDropdownSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cityAreaMap = AppConstants.cityAreaMap;
-    final availableAreas = cityAreaMap[selectedCity] ?? [];
+    final locationState = context.watch<LocationCubit>().state;
+
+    // 🔄 حالة التحميل
+    if (locationState is LocationLoading || locationState is LocationInitial) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // ⚠️ حالة الخطأ
+    if (locationState is LocationError) {
+      return Text(
+        locationState.error,
+        style: Styles.body.copyWith(color: Colors.red),
+      );
+    }
+
+    // ✅ البيانات جاهزة
+    final countriesData = (locationState as LocationLoaded).countriesData;
+    final availableAreas = countriesData[selectedCity] ?? [];
 
     return Column(
       children: [
-        // 🏙️ القائمة الأولى: البلد / المدينة الرئيسية
+        // 🏙️ القائمة الأولى: الدولة
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
@@ -36,11 +53,11 @@ class CityAreaDropdownSelector extends StatelessWidget {
             child: DropdownButton<String>(
               isExpanded: true,
               hint: Text("اختر البلد / المدينة الرئيسية", style: Styles.body.copyWith(color: Colors.grey)),
-              value: cityAreaMap.containsKey(selectedCity) ? selectedCity : null,
-              items: cityAreaMap.keys.map((String city) {
+              value: countriesData.containsKey(selectedCity) ? selectedCity : null,
+              items: countriesData.keys.map((String country) {
                 return DropdownMenuItem<String>(
-                  value: city,
-                  child: Text(city, style: Styles.body),
+                  value: country,
+                  child: Text(country, style: Styles.body),
                 );
               }).toList(),
               onChanged: (val) {
@@ -51,7 +68,7 @@ class CityAreaDropdownSelector extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // 📍 القائمة الثانية: المنطقة / المحافظة الفرعية
+        // 📍 القائمة الثانية: المدينة/المنطقة
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(

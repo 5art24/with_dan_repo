@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project1_collage/core/models/service.dart';
 import 'package:project1_collage/core/styles.dart';
+import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
@@ -159,29 +161,27 @@ class ServiceCard extends StatelessWidget {
           Positioned(
             top: 10,
             right: 10,
-            child: GestureDetector(
-              onTap:
-                  onFavoriteTap ??
-                  () {
-                    // منطق حفظ الخدمة في المفضلة هنا
-                  },
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  // يمكنك استبدال الشرط بمتغير الـ favorite الحقيقي من الموديل الخاص بك
-                  service.isFavorite == true
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: service.isFavorite == true
-                      ? Colors.red
-                      : Styles.mainColor,
-                  size: 16,
-                ),
-              ),
+            child: BlocBuilder<AuthCubit, AuthState>(
+              builder: (context, state) {
+                final authCubit = context.read<AuthCubit>();
+                final isFav = authCubit.isServiceFavorite(service.id);
+
+                return GestureDetector(
+                  onTap: onFavoriteTap ?? () => authCubit.toggleFavoriteService(service),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: isFav ?Styles.mainColor: const Color.fromARGB(255, 184, 183, 183),
+                      size: 16,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 

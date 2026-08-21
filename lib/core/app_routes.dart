@@ -13,14 +13,13 @@ import 'package:project1_collage/features/details_page/constant_event/event_book
 import 'package:project1_collage/features/details_page/personal_event/personal_event_details_view.dart';
 import 'package:project1_collage/features/details_page/service/views/details_page.dart';
 import 'package:project1_collage/features/explore_constant_events/views/explore_constant_events_page.dart';
+import 'package:project1_collage/features/favorite_page.dart';
 import 'package:project1_collage/features/home/views/home_view.dart';
 import 'package:project1_collage/core/widgets/custom_nav_bar.dart';
 import 'package:project1_collage/features/home/views/see_all_events.dart';
 import 'package:project1_collage/features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart';
 import 'package:project1_collage/features/planning_event/presentation/views/planning_event_view.dart';
-import 'package:project1_collage/features/profile/views/auth/login_screen.dart';
-import 'package:project1_collage/features/profile/views/auth/register_screen.dart';
-import 'package:project1_collage/features/profile/views/provider/service_profile_page.dart';
+import 'package:project1_collage/features/profile/views/profile_page_body.dart';
 import 'package:project1_collage/features/profile/views/profile_page.dart';
 import 'package:project1_collage/features/profile/views/provider/become_provider_page.dart';
 import 'package:project1_collage/features/profile/views/wallet/wallet_page.dart';
@@ -38,21 +37,20 @@ abstract class AppRoutes {
       '/planningEvent/services-browser/services-details';
   static String kAddTask = '/add-task';
   static String kDispalyingSelectedServices = "/display-selected-services";
-  static String kProfile = "/profile";
   static String kPersonalEventDetails = "/personal-event-details";
   static String kExploreConstantEvents = "/explore-constant-events";
   static String kConstantEventDetails =
       "/explore-constant-events/constant-event-details";
   static String kSearchResults = "/explore-constant-events/search-results";
   static String kSeeAllEvents = "/see-all-events";
-  static String kLogin = "/login";
-  static String kServiceProfile = "/service-profile";
+  static String kProfile = "/profile";
   static String kBecomeProvider = "/become-provider";
   static String kWallet = "/wallet";
   static String kAppSettings = "/app-settings";
   static String kRegister = "/register";
+  static String kFavorites = "/favorites"; 
   static final router = GoRouter(
-    initialLocation: kLogin,
+    initialLocation: kHomeView,
     routes: [
       // استخدام ShellRoute للصفحات الرئيسية فقط
       ShellRoute(
@@ -76,9 +74,14 @@ abstract class AppRoutes {
             path: kExploreConstantEvents,
             builder: (context, state) => ExploreConstantEventsPage(),
           ),
-          //Still need profile
+          GoRoute(
+            path: kProfile,
+            builder: (context, state) => const ProfilePageBody(),
+          ),
+          // GoRoute(path: kProfile, builder: (context, state) => const ProfilePage()),
         ],
       ),
+      GoRoute(path: kFavorites, builder: (context, state) => const FavoriteServicesPageBody()),
       GoRoute(
         path: kEditEvent,
         builder: (context, state) {
@@ -117,13 +120,9 @@ abstract class AppRoutes {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
           final service = extra['service'] as ServiceModel;
-          final cubit =
-              extra['cubit'] as EventPlanningCubit; // 👈 استلام الـ Cubit
+          final cubit = extra['cubit'] as EventPlanningCubit?; // أصبح nullable
 
-          return BlocProvider.value(
-            value: cubit,
-            child: DetailsPage(serviceModel: service),
-          );
+          return DetailsPage(serviceModel: service, cubit: cubit);
         },
       ),
       GoRoute(
@@ -194,12 +193,6 @@ abstract class AppRoutes {
           );
         },
       ),
-      GoRoute(path: kLogin, builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: kServiceProfile,
-        builder: (context, state) => const ServiceProfilePage(),
-      ),
-      GoRoute(path: kProfile, builder: (context, state) => const ProfilePage()),
       GoRoute(
         path: kBecomeProvider,
         builder: (context, state) => const BecomeProviderPage(),
@@ -208,10 +201,6 @@ abstract class AppRoutes {
       GoRoute(
         path: kAppSettings,
         builder: (context, state) => const AppSettingsPage(),
-      ),
-      GoRoute(
-        path: kRegister,
-        builder: (context, state) => const RegisterScreen(),
       ),
     ],
   );

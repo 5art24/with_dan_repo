@@ -5,15 +5,24 @@ import 'package:project1_collage/features/details_page/service/views/widgets/det
 import 'package:project1_collage/features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart';
 
 class DetailsPage extends StatelessWidget {
-  const DetailsPage({super.key, required this.serviceModel});
+  const DetailsPage({super.key, required this.serviceModel, this.cubit});
+
   final ServiceModel serviceModel;
+  final EventPlanningCubit? cubit;
+
   @override
   Widget build(BuildContext context) {
-      final cubit = context.watch<EventPlanningCubit>();
+    final body = DetailsPageBody(serviceModel: serviceModel, cubit: cubit);
+
+    // لا يوجد Cubit (قادمون من البروفايل) → لا داعي لأي BlocProvider
+    if (cubit == null) {
+      return Scaffold(body: body);
+    }
+
     return Scaffold(
       body: BlocProvider.value(
-        value: cubit,
-        child:  DetailsPageBody(serviceModel: serviceModel,),
+        value: cubit!,
+        child: body,
       ),
     );
   }

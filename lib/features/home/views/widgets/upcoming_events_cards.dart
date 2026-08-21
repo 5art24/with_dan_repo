@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/models/constant_event.dart';
+import 'package:project1_collage/core/models/normal_user.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
 import 'package:project1_collage/core/models/task.dart';
 import 'package:project1_collage/core/styles.dart';
@@ -43,12 +44,17 @@ class UpcomingEventsCards extends StatelessWidget {
               if (events.isEmpty) {
                 return const SizedBox(
                   height: 175,
-                  child: Center(child: Text('There are no events at the moment')),
+                  child: Center(
+                    child: Text('There are no events at the moment'),
+                  ),
                 );
               }
 
               return ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 175, maxHeight: 200),
+                constraints: const BoxConstraints(
+                  minHeight: 175,
+                  maxHeight: 200,
+                ),
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: events.length,
@@ -74,15 +80,16 @@ class UpcomingEventsCards extends StatelessWidget {
 
                       // 🟢 جلب أحدث نسخة من الفعالية بمهامها المحدثة عبر الـ ID
                       final updatedEvent = (authState is Authenticated)
-                          ? authState.user.personalEvents.firstWhere(
+                          ? (authState.user as NormalUser).personalEvents.firstWhere(
                               (e) => e.id == event.id,
                               orElse: () => event,
                             )
                           : event;
 
                       // 🟢 حساب التقدم ديناميكياً
-                      final currentProgress =
-                          _calculateEventProgress(updatedEvent.tasks);
+                      final currentProgress = _calculateEventProgress(
+                        updatedEvent.tasks,
+                      );
 
                       return Padding(
                         padding: const EdgeInsets.only(

@@ -19,12 +19,12 @@ class _WalletPageState extends State<WalletPage> {
     return Scaffold(
       backgroundColor: Styles.background,
       drawer: DrawerMenu(
-        userName: 'أحمد الزعبي',
-        userEmail: 'ahmed@example.com',
+        NormalUserName: 'أحمد الزعبي',
+        NormalUserEmail: 'ahmed@example.com',
         isServiceProvider: false,
         onServiceProviderToggle: (value) {},
         onLogout: () {
-          GoRouter.of(context).go(AppRoutes.kLogin);
+          // see GoRouter.of(context).go(AppRoutes.kLogin);
         },
       ),
       appBar: AppBar(
@@ -62,10 +62,7 @@ class _WalletPageState extends State<WalletPage> {
                 children: [
                   const Text(
                     'الرصيد الحالي',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -163,10 +160,30 @@ class _WalletPageState extends State<WalletPage> {
 
   List<Widget> _buildTransactions() {
     final transactions = [
-      {'title': 'حجز صالة الأفراح الذهبية', 'amount': -50000, 'date': '2026-01-15', 'type': 'expense'},
-      {'title': 'إيداع رصيد', 'amount': 100000, 'date': '2026-01-10', 'type': 'income'},
-      {'title': 'حجز خدمات إضاءة', 'amount': -25000, 'date': '2026-01-05', 'type': 'expense'},
-      {'title': 'استرداد مبلغ', 'amount': 15000, 'date': '2026-01-01', 'type': 'refund'},
+      {
+        'title': 'حجز صالة الأفراح الذهبية',
+        'amount': -50000,
+        'date': '2026-01-15',
+        'type': 'expense',
+      },
+      {
+        'title': 'إيداع رصيد',
+        'amount': 100000,
+        'date': '2026-01-10',
+        'type': 'income',
+      },
+      {
+        'title': 'حجز خدمات إضاءة',
+        'amount': -25000,
+        'date': '2026-01-05',
+        'type': 'expense',
+      },
+      {
+        'title': 'استرداد مبلغ',
+        'amount': 15000,
+        'date': '2026-01-01',
+        'type': 'refund',
+      },
     ];
 
     return transactions.map((tx) {
@@ -184,7 +201,9 @@ class _WalletPageState extends State<WalletPage> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: (isIncome ? Styles.success : Styles.error).withOpacity(0.1),
+                color: (isIncome ? Styles.success : Styles.error).withOpacity(
+                  0.1,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -237,9 +256,9 @@ class _WalletPageState extends State<WalletPage> {
       builder: (context) => _DepositBottomSheet(
         onDeposit: (amount) {
           setState(() => _balance += amount);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('تم إيداع $amount ل.س بنجاح')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('تم إيداع $amount ل.س بنجاح')));
         },
       ),
     );
@@ -308,21 +327,9 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
 
   // المحافظ المدعومة
   final List<Map<String, String>> _supportedWallets = [
-    {
-      'name': 'شام كاش',
-      'number': '0987654321',
-      'owner': 'شركة شام كاش',
-    },
-    {
-      'name': 'سيريتل كاش',
-      'number': '0991234567',
-      'owner': 'سيريتل',
-    },
-    {
-      'name': 'بيمو كاش',
-      'number': '0945678901',
-      'owner': 'بيمو بنك',
-    },
+    {'name': 'شام كاش', 'number': '0987654321', 'owner': 'شركة شام كاش'},
+    {'name': 'سيريتل كاش', 'number': '0991234567', 'owner': 'سيريتل'},
+    {'name': 'بيمو كاش', 'number': '0945678901', 'owner': 'بيمو بنك'},
   ];
 
   @override
@@ -338,14 +345,20 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
 
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء إدخال مبلغ صحيح'), backgroundColor: Styles.error),
+        const SnackBar(
+          content: Text('الرجاء إدخال مبلغ صحيح'),
+          backgroundColor: Styles.error,
+        ),
       );
       return;
     }
 
     if (transferNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء إدخال رقم التحويل'), backgroundColor: Styles.error),
+        const SnackBar(
+          content: Text('الرجاء إدخال رقم التحويل'),
+          backgroundColor: Styles.error,
+        ),
       );
       return;
     }
@@ -405,10 +418,7 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
             const SizedBox(height: 8),
             Text(
               'اختر محفظة وأرسل المبلغ، ثم أدخل رقم التحويل',
-              style: TextStyle(
-                fontSize: 14,
-                color: Styles.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: Styles.textSecondary),
             ),
             const SizedBox(height: 24),
 
@@ -422,7 +432,9 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            ..._supportedWallets.map((wallet) => _buildWalletCard(wallet)).toList(),
+            ..._supportedWallets
+                .map((wallet) => _buildWalletCard(wallet))
+                .toList(),
 
             const SizedBox(height: 24),
 
@@ -433,14 +445,20 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
               decoration: InputDecoration(
                 labelText: 'المبلغ (ل.س)',
                 hintText: 'مثال: 50000',
-                prefixIcon: const Icon(Icons.attach_money, color: Styles.primary),
+                prefixIcon: const Icon(
+                  Icons.attach_money,
+                  color: Styles.primary,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Styles.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -452,14 +470,20 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
               decoration: InputDecoration(
                 labelText: 'رقم التحويل / وصل الإيداع',
                 hintText: 'أدخل رقم التحويل أو انسخ من التطبيق',
-                prefixIcon: const Icon(Icons.receipt_long, color: Styles.primary),
+                prefixIcon: const Icon(
+                  Icons.receipt_long,
+                  color: Styles.primary,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
                 fillColor: Styles.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -518,10 +542,7 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
                   Expanded(
                     child: Text(
                       'سيتم مراجعة طلبك من قبل الإدارة ورفع الرصيد خلال فترة قصيرة. احتفظ برقم التحويل للمراجعة.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Styles.warning,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Styles.warning),
                     ),
                   ),
                 ],
@@ -551,7 +572,11 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
               color: Styles.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.account_balance_wallet, color: Styles.primary, size: 24),
+            child: const Icon(
+              Icons.account_balance_wallet,
+              color: Styles.primary,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -568,10 +593,7 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
                 ),
                 Text(
                   wallet['owner']!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Styles.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Styles.textSecondary),
                 ),
               ],
             ),
@@ -596,7 +618,10 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Styles.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -644,19 +669,23 @@ class _DepositBottomSheetState extends State<_DepositBottomSheet> {
           decoration: BoxDecoration(
             color: Styles.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Styles.textHint.withOpacity(0.3), style: BorderStyle.solid),
+            border: Border.all(
+              color: Styles.textHint.withOpacity(0.3),
+              style: BorderStyle.solid,
+            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_upload_outlined, size: 40, color: Styles.textSecondary),
+              Icon(
+                Icons.cloud_upload_outlined,
+                size: 40,
+                color: Styles.textSecondary,
+              ),
               const SizedBox(height: 8),
               Text(
                 'اضغط لاختيار صورة الوصل',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Styles.textSecondary,
-                ),
+                style: TextStyle(fontSize: 14, color: Styles.textSecondary),
               ),
             ],
           ),

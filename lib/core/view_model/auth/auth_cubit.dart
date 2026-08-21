@@ -1,5 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:project1_collage/core/models/constant_event.dart';
+import 'package:project1_collage/core/models/normal_user.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
+import 'package:project1_collage/core/models/service.dart';
+import 'package:project1_collage/core/models/service_provider_user.dart';
 import 'package:project1_collage/core/models/user.dart';
 
 part 'auth_state.dart';
@@ -7,8 +11,16 @@ part 'auth_state.dart';
 class AuthCubit extends Cubit<AuthState> {
   User? _currentUser;
 
-  // Getter للوصول للمستخدم الحالي من أي مكان عبر context.read<AuthCubit>().currentUser
   User? get currentUser => _currentUser;
+
+  // 🟢 وصول مُنمَّط حسب نوع المستخدم الفعلي
+  NormalUser? get currentNormalUser =>
+      _currentUser is NormalUser ? _currentUser as NormalUser : null;
+
+  ServiceProviderUser? get currentProviderUser =>
+      _currentUser is ServiceProviderUser
+          ? _currentUser as ServiceProviderUser
+          : null;
 
   AuthCubit() : super(AuthInitial());
 
@@ -22,48 +34,95 @@ class AuthCubit extends Cubit<AuthState> {
     emit(Unauthenticated());
   }
 
-  // أضف هذا التابع داخل class AuthCubit
   void updateUserData(User updatedUser) {
     _currentUser = updatedUser;
     emit(Authenticated(_currentUser!));
   }
 
-  // auth_cubit.dart
-  void deletePersonalEvent(String eventId) {
-    if (_currentUser == null) return;
+  //==================== Personal Events (NormalUser فقط) ====================
 
-    final updatedEvents = List<PersonalEvent>.from(_currentUser!.personalEvents)
-      ..removeWhere((e) => e.id == eventId);
-
-    _currentUser = _currentUser!.copyWith(personalEvents: updatedEvents);
-    emit(
-      Authenticated(_currentUser!),
-    ); // 🟢 يطلق حالة جديدة فتتحدث كل الشاشات المربوطة بـ AuthCubit
-  }
-
-  //========================Edit Info===========================
-  // auth_cubit.dart
   void addPersonalEvent(PersonalEvent event) {
-    if (_currentUser == null) return;
-    final updatedEvents = List<PersonalEvent>.from(_currentUser!.personalEvents)
-      ..add(event);
-    _currentUser = _currentUser!.copyWith(personalEvents: updatedEvents);
+    final normal = currentNormalUser;
+    if (normal == null) return;
+    _currentUser = normal.addingPersonalEvent(event);
     emit(Authenticated(_currentUser!));
   }
 
-  // 🟢 تابع خاص بتعديل فعالية موجودة مسبقاً
   void updatePersonalEvent(PersonalEvent updatedEvent) {
-    if (_currentUser == null) return;
-
-    final updatedEvents = List<PersonalEvent>.from(
-      _currentUser!.personalEvents,
-    );
-    final index = updatedEvents.indexWhere((e) => e.id == updatedEvent.id);
-
-    if (index != -1) {
-      updatedEvents[index] = updatedEvent; // 🔄 استبدال النسخة القديمة بالجديدة
-      _currentUser = _currentUser!.copyWith(personalEvents: updatedEvents);
-      emit(Authenticated(_currentUser!));
-    }
+    final normal = currentNormalUser;
+    if (normal == null) return;
+    _currentUser = normal.updatingPersonalEvent(updatedEvent);
+    emit(Authenticated(_currentUser!));
   }
+
+  void deletePersonalEvent(String eventId) {
+    final normal = currentNormalUser;
+    if (normal == null) return;
+    _currentUser = normal.removingPersonalEvent(eventId);
+    emit(Authenticated(_currentUser!));
+  }
+
+  //==================== Constant Events (NormalUser فقط) ====================
+
+  void bookConstantEvent(ConstantEventModel event) {
+    final normal = currentNormalUser;
+    if (normal == null) return;
+    _currentUser = normal.addingConstantEvent(event);
+    emit(Authenticated(_currentUser!));
+  }
+
+  void cancelConstantEvent(String eventId) {
+    final normal = currentNormalUser;
+    if (normal == null) return;
+    _currentUser = normal.removingConstantEvent(eventId);
+    emit(Authenticated(_currentUser!));
+  }
+
+  //==================== Services (ServiceProviderUser فقط) ====================
+
+  void addService(ServiceModel service) {
+    final provider = currentProviderUser;
+    if (provider == null) return;
+    _currentUser = provider.addingService(service);
+    emit(Authenticated(_currentUser!));
+  }
+
+  void removeService(String serviceId) {
+    final provider = currentProviderUser;
+    if (provider == null) return;
+    _currentUser = provider.removingService(serviceId);
+    emit(Authenticated(_currentUser!));
+  }
+  //==================== Favorites (NormalUser فقط) ====================
+
+/// 🟢 إضافة أو إزالة الخدمة من المفضلة
+Future<void> toggleFavoriteService(ServiceModel service) async {
+  final normal = currentNormalUser;
+  if (normal == null) return;
+
+  // 1. الاحتفاظ بالنسخة القديمة لاسترجاعها في حال الفشل
+  final previousUser = _currentUser;
+
+  // 2. تحديث الواجهة فوراً لتوفير تجربة مستخدم سريعة
+  _currentUser = normal.togglingFavoriteService(service);
+  emit(Authenticated(_currentUser!));
+
+  try {
+    // 3. استدعاء الـ API الخاص بالمفضلة هنا
+    // await favoriteRepository.toggleFavorite(service.id);
+  } catch (e) {
+    // 4. إرجاع الحالة السابقة في حال حدوث خطأ بالنظام أو الشبكة
+    _currentUser = previousUser;
+    emit(Authenticated(_currentUser!));
+    
+    // يمكن هنا إرسال حالة خطأ مؤقتة أو إظهار SnackBar من الواجهة
+  }
+}
+
+/// 🟢 التحقق هل الخدمة مفضلة للمستخدم الحالي أم لا
+bool isServiceFavorite(String serviceId) {
+  final normal = currentNormalUser;
+  if (normal == null) return false;
+  return normal.isServiceFavorite(serviceId);
+}
 }

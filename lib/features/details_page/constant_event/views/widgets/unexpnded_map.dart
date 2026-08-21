@@ -23,8 +23,8 @@ class UnExpandedMap extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => MapScreen(
               location: serviceCoordinates,
-              title: serviceName
-               //name of service displayed on the top
+              title: serviceName,
+              //name of service displayed on the top
             ),
           ),
         );
@@ -52,19 +52,17 @@ class UnExpandedMap extends StatelessWidget {
                 options: MapOptions(
                   initialCenter: serviceCoordinates,
                   initialZoom: 14.0,
-                 // We completely disable the interaction here so the user doesn’t have trouble scrolling the screen up and down
-                  interactionOptions:
-                      const InteractionOptions(
-                        flags: InteractiveFlag.none,
-                      ),
+                  // We completely disable the interaction here so the NormalUser doesn’t have trouble scrolling the screen up and down
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.none,
+                  ),
                 ),
                 children: [
                   //the basic map
                   TileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName:
-                        'com.example.eva',
+                    userAgentPackageName: 'com.example.eva',
                   ),
                   MarkerLayer(
                     markers: [
@@ -82,7 +80,7 @@ class UnExpandedMap extends StatelessWidget {
                   ),
                 ],
               ),
-    
+
               // 2. Transparent zoom button
               Positioned(
                 bottom: 8,
@@ -98,11 +96,7 @@ class UnExpandedMap extends StatelessWidget {
                   ),
                   child: const Row(
                     children: [
-                      Icon(
-                        Icons.fullscreen,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+                      Icon(Icons.fullscreen, color: Colors.white, size: 16),
                       SizedBox(width: 4),
                       Text(
                         "Zoom in",

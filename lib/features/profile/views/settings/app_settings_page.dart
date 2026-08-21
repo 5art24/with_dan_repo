@@ -27,7 +27,9 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
   Future<void> _loadTermsAndConditions() async {
     try {
-      final content = await rootBundle.loadString('lib/core/terms_and_conditions.md');
+      final content = await rootBundle.loadString(
+        'lib/core/terms_and_conditions.md',
+      );
       if (mounted) {
         setState(() {
           _termsContent = content;
@@ -56,7 +58,9 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Text(
             'تغيير كلمة المرور',
             textAlign: TextAlign.center,
@@ -74,12 +78,23 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                   obscureText: obscureCurrent,
                   decoration: InputDecoration(
                     labelText: 'كلمة المرور الحالية',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Styles.primary),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, color: Styles.textSecondary),
-                      onPressed: () => setState(() => obscureCurrent = !obscureCurrent),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Styles.primary,
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureCurrent
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Styles.textSecondary,
+                      ),
+                      onPressed: () =>
+                          setState(() => obscureCurrent = !obscureCurrent),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     filled: true,
                     fillColor: Styles.surface,
                   ),
@@ -90,12 +105,20 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                   obscureText: obscureNew,
                   decoration: InputDecoration(
                     labelText: 'كلمة المرور الجديدة',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Styles.primary),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Styles.primary,
+                    ),
                     suffixIcon: IconButton(
-                      icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, color: Styles.textSecondary),
+                      icon: Icon(
+                        obscureNew ? Icons.visibility_off : Icons.visibility,
+                        color: Styles.textSecondary,
+                      ),
                       onPressed: () => setState(() => obscureNew = !obscureNew),
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     filled: true,
                     fillColor: Styles.surface,
                   ),
@@ -106,12 +129,23 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                   obscureText: obscureConfirm,
                   decoration: InputDecoration(
                     labelText: 'تأكيد كلمة المرور الجديدة',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Styles.primary),
-                    suffixIcon: IconButton(
-                      icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility, color: Styles.textSecondary),
-                      onPressed: () => setState(() => obscureConfirm = !obscureConfirm),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Styles.primary,
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureConfirm
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Styles.textSecondary,
+                      ),
+                      onPressed: () =>
+                          setState(() => obscureConfirm = !obscureConfirm),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     filled: true,
                     fillColor: Styles.surface,
                   ),
@@ -122,37 +156,55 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء', style: TextStyle(color: Styles.textSecondary)),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(color: Styles.textSecondary),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
                 if (currentPasswordController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('يرجى إدخال كلمة المرور الحالية'), backgroundColor: Styles.error),
+                    const SnackBar(
+                      content: Text('يرجى إدخال كلمة المرور الحالية'),
+                      backgroundColor: Styles.error,
+                    ),
                   );
                   return;
                 }
                 if (newPasswordController.text.length < 6) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل'), backgroundColor: Styles.error),
+                    const SnackBar(
+                      content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
+                      backgroundColor: Styles.error,
+                    ),
                   );
                   return;
                 }
-                if (newPasswordController.text != confirmPasswordController.text) {
+                if (newPasswordController.text !=
+                    confirmPasswordController.text) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('كلمتا المرور غير متطابقتين'), backgroundColor: Styles.error),
+                    const SnackBar(
+                      content: Text('كلمتا المرور غير متطابقتين'),
+                      backgroundColor: Styles.error,
+                    ),
                   );
                   return;
                 }
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('تم تغيير كلمة المرور بنجاح'), backgroundColor: Styles.success),
+                  const SnackBar(
+                    content: Text('تم تغيير كلمة المرور بنجاح'),
+                    backgroundColor: Styles.success,
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Styles.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('حفظ التغييرات'),
             ),
@@ -197,7 +249,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                         gradient: Styles.primaryGradient,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.description, color: Colors.white, size: 24),
+                      child: const Icon(
+                        Icons.description,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -212,14 +268,19 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Styles.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Styles.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               Expanded(
                 child: _termsLoading
-                    ? const Center(child: CircularProgressIndicator(color: Styles.primary))
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Styles.primary),
+                      )
                     : SingleChildScrollView(
                         controller: scrollController,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -268,7 +329,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                 gradient: Styles.primaryGradient,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.support_agent, size: 36, color: Colors.white),
+              child: const Icon(
+                Icons.support_agent,
+                size: 36,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -283,10 +348,7 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
             Text(
               'فريق الدعم جاهز لمساعدتك على مدار الساعة',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Styles.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: Styles.textSecondary),
             ),
             const SizedBox(height: 24),
             _buildContactItem(
@@ -325,9 +387,14 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                   backgroundColor: Styles.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-                child: const Text('إغلاق', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'إغلاق',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -369,10 +436,7 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Styles.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Styles.textSecondary),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -386,7 +450,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Styles.textSecondary),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Styles.textSecondary,
+            ),
           ],
         ),
       ),
@@ -398,12 +466,12 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
     return Scaffold(
       backgroundColor: Styles.background,
       drawer: DrawerMenu(
-        userName: 'أحمد الزعبي',
-        userEmail: 'ahmed@example.com',
+        NormalUserName: 'أحمد الزعبي',
+        NormalUserEmail: 'ahmed@example.com',
         isServiceProvider: false,
         onServiceProviderToggle: (value) {},
         onLogout: () {
-          GoRouter.of(context).go(AppRoutes.kLogin);
+          //see GoRouter.of(context).go(AppRoutes.kLogin);
         },
       ),
       appBar: AppBar(
@@ -443,7 +511,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
             title: 'اللغة',
             subtitle: 'العربية',
             leading: Icons.language,
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Styles.textSecondary),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Styles.textSecondary,
+            ),
             onTap: () {},
           ),
           const SizedBox(height: 24),
@@ -454,7 +526,8 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
             leading: Icons.notifications,
             trailing: Switch(
               value: _notificationsEnabled,
-              onChanged: (value) => setState(() => _notificationsEnabled = value),
+              onChanged: (value) =>
+                  setState(() => _notificationsEnabled = value),
               activeThumbColor: Styles.primary,
             ),
           ),
@@ -494,14 +567,22 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
             title: 'تغيير كلمة المرور',
             subtitle: 'تحديث كلمة مرور الحساب',
             leading: Icons.lock,
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Styles.textSecondary),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Styles.textSecondary,
+            ),
             onTap: _showChangePasswordDialog,
           ),
           _buildSettingsTile(
             title: 'إدارة الحساب',
             subtitle: 'حذف الحساب أو تعطيله مؤقتاً',
             leading: Icons.account_circle,
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Styles.error),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Styles.error,
+            ),
             onTap: () {},
             textColor: Styles.error,
           ),
@@ -569,12 +650,15 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Styles.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 13, color: Styles.textSecondary),
         ),
-        trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16, color: Styles.textSecondary),
+        trailing:
+            trailing ??
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Styles.textSecondary,
+            ),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),

@@ -4,18 +4,18 @@ import 'package:project1_collage/core/styles.dart';
 import 'package:project1_collage/core/app_routes.dart';
 
 class DrawerMenu extends StatefulWidget {
-  final String userName;
-  final String userEmail;
-  final String? userImage;
+  final String NormalUserName;
+  final String NormalUserEmail;
+  final String? NormalUserImage;
   final bool isServiceProvider;
   final Function(bool) onServiceProviderToggle;
   final VoidCallback onLogout;
 
   const DrawerMenu({
     super.key,
-    required this.userName,
-    required this.userEmail,
-    this.userImage,
+    required this.NormalUserName,
+    required this.NormalUserEmail,
+    this.NormalUserImage,
     this.isServiceProvider = false,
     required this.onServiceProviderToggle,
     required this.onLogout,
@@ -68,23 +68,23 @@ class _DrawerMenuState extends State<DrawerMenu> {
                         ),
                       ],
                     ),
-child: widget.userImage != null
+                    child: widget.NormalUserImage != null
                         ? ClipOval(
                             child: Image.network(
-                              widget.userImage!,
+                              widget.NormalUserImage!,
                               fit: BoxFit.cover,
                             ),
                           )
-                          : const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Styles.primary,
-                            ),
+                        : const Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Styles.primary,
+                          ),
                   ),
                   const SizedBox(height: 12),
                   // اسم المستخدم
                   Text(
-                    widget.userName,
+                    widget.NormalUserName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -95,7 +95,7 @@ child: widget.userImage != null
                   const SizedBox(height: 4),
                   // البريد الإلكتروني
                   Text(
-                    widget.userEmail,
+                    widget.NormalUserEmail,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
                       fontSize: 14,
@@ -178,7 +178,9 @@ child: widget.userImage != null
                             value: widget.isServiceProvider,
                             onChanged: widget.onServiceProviderToggle,
                             activeColor: Styles.primary,
-                            activeTrackColor: Styles.primary.withValues(alpha: 0.3),
+                            activeTrackColor: Styles.primary.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                         ],
                       ),
@@ -197,16 +199,12 @@ child: widget.userImage != null
                   ),
 
                   const SizedBox(height: 8),
-
-                  // ═══════════════════════════════════════════
-                  // حول التطبيق (قبل تسجيل الخروج)
-                  // ═══════════════════════════════════════════
                   _buildMenuItem(
                     icon: Icons.info_outline,
-                    title: 'حول التطبيق',
+                    title: 'المفضلة',
                     onTap: () {
                       Navigator.pop(context);
-                      _showAboutDialog(context);
+                      GoRouter.of(context).push(AppRoutes.kFavorites);
                     },
                   ),
 
@@ -277,11 +275,7 @@ child: widget.userImage != null
         ],
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: iconColor ?? Styles.primary,
-          size: 24,
-        ),
+        leading: Icon(icon, color: iconColor ?? Styles.primary, size: 24),
         title: Text(
           title,
           style: TextStyle(
@@ -297,9 +291,7 @@ child: widget.userImage != null
           size: 16,
         ),
         onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
@@ -311,9 +303,7 @@ child: widget.userImage != null
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'حول التطبيق',
           textAlign: TextAlign.center,
@@ -334,11 +324,7 @@ child: widget.userImage != null
                 gradient: Styles.primaryGradient,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.event,
-                size: 40,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.event, size: 40, color: Colors.white),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -352,10 +338,7 @@ child: widget.userImage != null
             const SizedBox(height: 8),
             const Text(
               'تطبيق إدارة الفعاليات والخدمات',
-              style: TextStyle(
-                fontSize: 14,
-                color: Styles.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: Styles.textSecondary),
             ),
             const SizedBox(height: 16),
             Container(
@@ -366,36 +349,24 @@ child: widget.userImage != null
               ),
               child: const Text(
                 'الإصدار: 1.0.0',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Styles.textSecondary,
-                ),
+                style: TextStyle(fontSize: 12, color: Styles.textSecondary),
               ),
             ),
             const SizedBox(height: 12),
             const Text(
               'جامعة دمشق - كلية الهندسة المعلوماتية',
-              style: TextStyle(
-                fontSize: 12,
-                color: Styles.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: Styles.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             const Text(
               'مشروع 1, 2026',
-              style: TextStyle(
-                fontSize: 12,
-                color: Styles.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: Styles.textSecondary),
             ),
             const SizedBox(height: 16),
             const Text(
               '© 2026 eva. جميع الحقوق محفوظة.',
-              style: TextStyle(
-                fontSize: 11,
-                color: Styles.textHint,
-              ),
+              style: TextStyle(fontSize: 11, color: Styles.textHint),
             ),
           ],
         ),
@@ -425,9 +396,7 @@ child: widget.userImage != null
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

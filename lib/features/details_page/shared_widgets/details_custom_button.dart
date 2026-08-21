@@ -25,7 +25,7 @@ class DetailsCustomButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(
-        isEnabled ? 'Add to Event' : 'Not Available',
+        isEnabled ? 'Add' : 'Not Available',
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );

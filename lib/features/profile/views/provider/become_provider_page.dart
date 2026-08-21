@@ -39,14 +39,16 @@ class _BecomeProviderPageState extends State<BecomeProviderPage> {
   void _submitRequest() {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
-      
+
       // محاكاة إرسال الطلب
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           setState(() => _isSubmitting = false);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('تم إرسال طلبك بنجاح! سيتم مراجعته من قبل الإدارة.'),
+              content: Text(
+                'تم إرسال طلبك بنجاح! سيتم مراجعته من قبل الإدارة.',
+              ),
               backgroundColor: Styles.success,
             ),
           );
@@ -61,12 +63,12 @@ class _BecomeProviderPageState extends State<BecomeProviderPage> {
     return Scaffold(
       backgroundColor: Styles.background,
       drawer: DrawerMenu(
-        userName: 'أحمد الزعبي',
-        userEmail: 'ahmed@example.com',
+        NormalUserName: 'أحمد الزعبي',
+        NormalUserEmail: 'ahmed@example.com',
         isServiceProvider: false,
         onServiceProviderToggle: (value) {},
         onLogout: () {
-          GoRouter.of(context).go(AppRoutes.kLogin);
+          // see GoRouter.of(context).go(AppRoutes.kLogin);
         },
       ),
       appBar: AppBar(
@@ -262,10 +264,7 @@ class _BecomeProviderPageState extends State<BecomeProviderPage> {
               Center(
                 child: Text(
                   'سيتم مراجعة طلبك والرد عليك خلال 24 ساعة',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Styles.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Styles.textSecondary),
                 ),
               ),
             ],

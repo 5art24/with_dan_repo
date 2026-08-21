@@ -6,7 +6,6 @@ import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 part 'event_state.dart';
 
 class EventCubit extends Cubit<EventState> {
-
   final AuthCubit authCubit;
   StreamSubscription? _authSubscription;
 
@@ -25,9 +24,9 @@ class EventCubit extends Cubit<EventState> {
   void loadUpcomingEvents() {
     emit(EventLoading());
     try {
-      final user = authCubit.currentUser;
+      final NormalUser = authCubit.currentNormalUser;
 
-      if (user == null) {
+      if (NormalUser == null) {
         emit(EventError("لا يوجد مستخدم مسجل دخول"));
         return;
       }
@@ -36,14 +35,14 @@ class EventCubit extends Cubit<EventState> {
       final todayStart = DateTime(now.year, now.month, now.day);
 
       // دمج الفعاليات الخاصة والعامة المضافة عند المستخدم
-      final allUserEvents = <BaseEvent>[
-        ...user.personalEvents,
-        ...user.constantEvents,
+      final allNormalUserEvents = <BaseEvent>[
+        ...NormalUser.personalEvents,
+        ...NormalUser.constantEvents,
       ];
 
       // تصفية وترتيب الفعاليات القادمة من اليوم فصاعداً
       final upcoming =
-          allUserEvents
+          allNormalUserEvents
               .where(
                 (e) => e.startDate.isAfter(
                   todayStart.subtract(const Duration(seconds: 1)),

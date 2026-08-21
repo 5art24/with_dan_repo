@@ -3,8 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
-import 'package:project1_collage/core/models/service.dart'; // مسار الموديل لديكِ
-import 'package:project1_collage/core/models/user.dart';
+import 'package:project1_collage/core/models/service.dart'; 
 import 'package:project1_collage/core/styles.dart';
 import 'package:project1_collage/features/browsing_services/presentation/views/widgets/service_card.dart';
 import 'package:project1_collage/features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart';
@@ -31,7 +30,10 @@ class _DisplayingSelectedServicesState
 
     final eventDays = cubit.eventDurationInDays;
     final services = event.bookedServices;
-    final totalPrice = services.fold(0, (sum, item) => sum + item.price*eventDays);
+    final totalPrice = services.fold(
+      0,
+      (sum, item) => sum + item.price * eventDays,
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9FA),
       appBar: AppBar(
@@ -69,9 +71,10 @@ class _DisplayingSelectedServicesState
           IconButton(
             icon: Icon(Icons.arrow_forward),
             onPressed: () {
-              GoRouter.of(
-                context,
-              ).push(AppRoutes.kAddTask, extra: context.read<EventPlanningCubit>());
+              GoRouter.of(context).push(
+                AppRoutes.kAddTask,
+                extra: context.read<EventPlanningCubit>(),
+              );
             },
           ),
         ],

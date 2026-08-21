@@ -25,9 +25,9 @@ class _CustomNavBarState extends State<CustomNavBar> {
     // List of tabs - profile only for service providers
     final List<_NavTab> tabs = [
       _NavTab(index: 0, icon: Icons.home, route: AppRoutes.kHomeView),
-      _NavTab(index: 1, icon: Icons.search, route: AppRoutes.kPlanEvent),
-      _NavTab(index: 2, icon: Icons.add, route: AppRoutes.kExploreConstantEvents),
-      if (widget.isServiceProvider)
+      _NavTab(index: 1, icon: Icons.add, route: AppRoutes.kPlanEvent),
+      _NavTab(index: 2, icon: Icons.search, route: AppRoutes.kExploreConstantEvents),
+      // if (widget.isServiceProvider)
         _NavTab(index: 3, icon: Icons.person, route: AppRoutes.kProfile),
     ];
 

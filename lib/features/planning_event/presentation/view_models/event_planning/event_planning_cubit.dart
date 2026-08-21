@@ -6,9 +6,9 @@ import 'package:project1_collage/core/constants.dart';
 import 'package:project1_collage/core/mock_services.dart';
 import 'package:project1_collage/core/models/booking_range.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
+import 'package:project1_collage/core/models/review.dart';
 import 'package:project1_collage/core/models/service.dart';
 import 'package:project1_collage/core/models/task.dart';
-import 'package:project1_collage/core/models/user.dart';
 import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 import 'package:project1_collage/features/planning_event/models/service_item.dart';
 import 'package:equatable/equatable.dart';
@@ -60,11 +60,13 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
   /// 🟢 البحث عن الفعالية بوساطة ID داخل قائمة فعاليات المستخدم في AuthCubit وتعيينها كـ currentEvent
   void setInitialEventById(String eventId, AuthCubit authCubit) {
     // 1. الحصول على قائمة فعاليات المستخدم المسجل
-    final userEvents = authCubit.currentUser?.personalEvents ?? [];
+    final NormalUserEvents = authCubit.currentNormalUser?.personalEvents ?? [];
 
     try {
       // 2. البحث عن الفعالية بالـ ID
-      final foundEvent = userEvents.firstWhere((event) => event.id == eventId);
+      final foundEvent = NormalUserEvents.firstWhere(
+        (event) => event.id == eventId,
+      );
 
       // 3. تعيين الفعالية الحالية وإصدار الحالة
       _currentEvent = foundEvent;
@@ -475,4 +477,48 @@ class EventPlanningCubit extends Cubit<EventPlanningState> {
     _currentEvent = _currentEvent!.copyWith(tasks: updatedTasks);
     emit(EventUpdated(event: _currentEvent!));
   }
+  //============================Rating ================================
+  // داخل features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart
+
+/// 🟢 التحقق من أهلية التقييم للخدمة
+bool canRateService(String serviceId, String currentUserId) {
+  if (_currentEvent == null) return false;
+
+  // 1. تحقق من انتهاء الفعالية
+  final isEventEnded = _currentEvent!.endDate != null &&
+      _currentEvent!.endDate!.isBefore(DateTime.now());
+
+  // 2. تحقق من أن الخدمة محجوزة بالفعل في الفعالية
+  final isBooked = _currentEvent!.bookedServices.any((s) => s.id == serviceId);
+
+  return isEventEnded && isBooked;
+}
+
+/// 🟢 إضافة تقييم جديد للخدمة
+Future<void> submitServiceReview({
+  required String serviceId,
+  required String userId,
+  required double rating,
+  String? comment,
+}) async {
+  try {
+    emit(const EventLoading());
+
+    final newReview = ReviewModel(
+      reviewsId: DateTime.now().millisecondsSinceEpoch.toString(),
+      rating: rating,
+      createdAt: DateTime.now(),
+      comment: comment,
+      servId: serviceId,
+      userId: userId,
+    );
+  //see
+    // هنا يتم استدعاء API أو Repository لحفظ التقييم في Database
+    // await _reviewRepository.addReview(newReview);
+
+    emit(EventUpdated(event: _currentEvent!));
+  } catch (e) {
+    emit(PersonalEventError(error: "فشل إرسال التقييم: ${e.toString()}"));
+  }
+}
 }

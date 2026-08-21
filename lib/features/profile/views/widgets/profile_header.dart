@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/models/user.dart';
+import 'package:project1_collage/core/models/user.dart';
 import 'package:project1_collage/core/styles.dart';
 
 /// هيدر بروفايل عارض الخدمة — شبيه بانستا.
@@ -27,7 +27,7 @@ class ProfileHeader extends StatelessWidget {
     required this.onMessageTap,
   }) : super(key: key);
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -59,8 +59,11 @@ class ProfileHeader extends StatelessWidget {
                   clipBehavior: Clip.antiAlias,
                   child: provider.urlImage.isNotEmpty
                       ? Image.network(provider.urlImage, fit: BoxFit.cover)
-                      : const Icon(Icons.person,
-                          size: 40, color: Styles.primaryLight),
+                      : const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Styles.primaryLight,
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -91,10 +94,7 @@ class ProfileHeader extends StatelessWidget {
           if (bio != null && bio!.isNotEmpty)
             Text(
               bio!,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Styles.textSecondary,
-              ),
+              style: const TextStyle(fontSize: 13, color: Styles.textSecondary),
             ),
 
           const SizedBox(height: 12),
@@ -123,7 +123,9 @@ class ProfileHeader extends StatelessWidget {
                   child: Text(
                     isFollowing ? 'Following' : 'Follow',
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.bold),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -143,8 +145,7 @@ class ProfileHeader extends StatelessWidget {
                   ),
                   child: const Text(
                     'Message',
-                    style: TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -175,5 +176,3 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 }
-
-

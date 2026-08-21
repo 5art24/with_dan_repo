@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 abstract class Styles {
-  static const Color primary = Color(0xFF7B61FF);
-  static const Color primaryDark = Color(0xFF6B4EFF);
-  static const Color primaryLight = Color(0xFFA0C4FF);
+  static const Color primary = Color.fromARGB(255, 151, 143, 226);
+  static const Color primaryDark = Color.fromARGB(255, 107, 78, 255);
+  static const Color primaryLight = Color.fromARGB(255, 160, 196, 255);
 
   // الخلفيات
-  static const Color background = Color(0xFFF8F9FA);
+  static const Color background = Color.fromARGB(255, 248, 249, 250);
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color surface = Color(0xFFF0F0F5);
 

@@ -1,5 +1,6 @@
 import 'package:project1_collage/core/models/booking_range.dart';
-import 'package:project1_collage/core/models/user.dart';
+import 'package:project1_collage/core/models/review.dart';
+import 'package:project1_collage/core/models/service_provider_user.dart';
 
 class ServiceModel {
   final String id;
@@ -11,13 +12,14 @@ class ServiceModel {
   final int? capacity;
   final ServiceType type;
   final String? description;
-  final User provider;
+  final ServiceProviderUser provider;
   final List<BookingRange>? bookings;
   final int preparationDays;
   final bool isFavorite;
+  final List<ReviewModel> reviews;
 
-  ServiceModel( {
-     this.isFavorite=false,
+  ServiceModel({
+    this.isFavorite = false,
     required this.bookings,
     required this.provider,
     required this.id,
@@ -30,6 +32,7 @@ class ServiceModel {
     required this.type,
     required this.description,
     this.preparationDays = 0,
+    this.reviews = const [],
   });
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     return ServiceModel(
@@ -42,18 +45,62 @@ class ServiceModel {
       capacity: json['capacity'],
       type: _parseServiceType(json['category'] ?? json['type']),
       description: json['description'],
-      provider: json['provider'] != null 
-          ? User.fromJson(json['provider']) 
-          : User(id: json['userId']?.toString() ?? '', username: '', urlImage: ''),
+      provider: json['provider'] != null
+          ? ServiceProviderUser.fromJson(json['provider'])
+          : ServiceProviderUser(
+              id: json['ServiceProviderUserId']?.toString() ?? '',
+              username: '',
+              urlImage: '',
+            ),
       bookings: json['bookings'] != null
           ? (json['bookings'] as List)
-              .map((e) => BookingRange.fromJson(e))
-              .toList()
+                .map((e) => BookingRange.fromJson(e))
+                .toList()
           : null,
       preparationDays: json['preparation_days'] ?? json['preparationDays'] ?? 0,
       isFavorite: json['is_favorite'] ?? json['isFavorite'] ?? false,
     );
   }
+  double get averageRating {
+    if (reviews.isEmpty) return rating; // التقييم الافتراضي إذا لم يوجد تقييمات
+    final total = reviews.fold<double>(0.0, (sum, item) => sum + item.rating);
+    return total / reviews.length;
+  }
+
+  ServiceModel copyWith({
+    String? id,
+    String? name,
+    List<String>? imageUrl,
+    double? rating,
+    int? price,
+    String? location,
+    int? capacity,
+    ServiceType? type,
+    String? description,
+    ServiceProviderUser? provider,
+    List<BookingRange>? bookings,
+    int? preparationDays,
+    bool? isFavorite,
+    List<ReviewModel>? reviews,
+  }) {
+    return ServiceModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      rating: rating ?? this.rating,
+      price: price ?? this.price,
+      location: location ?? this.location,
+      capacity: capacity ?? this.capacity,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      provider: provider ?? this.provider,
+      bookings: bookings ?? this.bookings,
+      preparationDays: preparationDays ?? this.preparationDays,
+      isFavorite: isFavorite ?? this.isFavorite,
+      reviews: reviews ?? this.reviews,
+    );
+  }
+
   // دالة مساعدة لتحويل النصوص إلى ServiceType Enum
   static ServiceType _parseServiceType(String? typeStr) {
     switch (typeStr?.toLowerCase()) {
@@ -72,6 +119,7 @@ class ServiceModel {
         return ServiceType.none;
     }
   }
+
   /// يتحقق هل الخدمة متاحة لفترة فعالية كاملة (من startDate لـ endDate)
   /// مع الأخذ بعين الاعتبار أيام التجهيز المطلوبة قبل بداية الفعالية
   bool isAvailableForEvent({

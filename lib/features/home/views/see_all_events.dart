@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/models/constant_event.dart';
+import 'package:project1_collage/core/models/normal_user.dart';
 import 'package:project1_collage/core/models/personal_event.dart';
 import 'package:project1_collage/core/models/task.dart';
 import 'package:project1_collage/core/styles.dart';
@@ -78,15 +79,16 @@ class SeeAllEvents extends StatelessWidget {
 
                       // 🟢 جلب الفعالية المحدثة ذات نفس الـ ID من AuthCubit
                       final updatedEvent = (authState is Authenticated)
-                          ? authState.user.personalEvents.firstWhere(
+                          ? (authState.user as NormalUser).personalEvents.firstWhere(
                               (e) => e.id == event.id,
                               orElse: () => event,
                             )
                           : event;
 
                       // 🟢 حساب التقدم ديناميكياً بناءً على مهام updatedEvent
-                      final currentProgress =
-                          _calculateEventProgress(updatedEvent.tasks);
+                      final currentProgress = _calculateEventProgress(
+                        updatedEvent.tasks,
+                      );
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16.0),

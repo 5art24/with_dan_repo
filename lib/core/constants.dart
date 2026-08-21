@@ -1,25 +1,24 @@
 import 'package:project1_collage/core/models/booking_range.dart';
 import 'package:project1_collage/core/models/service.dart';
-import 'package:project1_collage/core/models/user.dart';
+import 'package:project1_collage/core/models/service_provider_user.dart';
 import 'package:project1_collage/features/planning_event/models/service_item.dart';
 
 enum Category { wedding, cultural, birthday, artistic }
 
 // core/constants/app_constants.dart
 class AppConstants {
-  
   static const Map<String, List<String>> cityAreaMap = {
-    "syria":["damascus"],
-    "ksa":["riyadh"],
-    "usa":["manhatan"],
-    "uk":["london"],
+    "syria": ["damascus"],
+    "ksa": ["riyadh"],
+    "usa": ["manhatan"],
+    "uk": ["london"],
     "سوريا": ["دمشق", "حلب", "اللاذقية", "حمص", "حماة", "طرطوس"],
     "السعودية": ["الرياض", "جدة", "مكة المكرمة", "الدمام", "المدينة المنورة"],
     "الإمارات": ["دبي", "أبوظبي", "الشارقة", "العين"],
     "مصر": ["القاهرة", "الإسكندرية", "الجيزة"],
     "الأردن": ["عمان", "إربد", "الزرقاء"],
   };
-  
+
   static final List<ServiceItem> allServices = [
     ServiceItem(
       service: ServiceModel(
@@ -47,10 +46,11 @@ class AppConstants {
         type: ServiceType.lighting,
         description:
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
-        provider: User(
-          username: 'user1',
+        provider: ServiceProviderUser(
+          username: 'NormalUser1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+          id: '',
         ),
       ),
       icon: "assets/icons/lighting.png",
@@ -80,10 +80,11 @@ class AppConstants {
         type: ServiceType.photograph,
         description:
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
-        provider: User(
-          username: 'user1',
+        provider: ServiceProviderUser(
+          username: 'NormalUser1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+          id: '',
         ),
       ),
       icon: "assets/icons/photograph.png",
@@ -114,10 +115,11 @@ class AppConstants {
         description:
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
 
-        provider: User(
-          username: 'user1',
+        provider: ServiceProviderUser(
+          username: 'NormalUser1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+          id: '',
         ),
       ),
       icon: "assets/icons/dj.png",
@@ -148,10 +150,11 @@ class AppConstants {
         description:
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
 
-        provider: User(
-          username: 'user1',
+        provider: ServiceProviderUser(
+          username: 'NormalUser1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+          id: '',
         ),
       ),
       icon: "assets/icons/venue.png",
@@ -183,10 +186,11 @@ class AppConstants {
         description:
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut... ',
 
-        provider: User(
-          username: 'user1',
+        provider: ServiceProviderUser(
+          username: 'NormalUser1',
           urlImage:
-              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", id: '',
+              "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop",
+          id: '',
         ),
       ),
     ),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:project1_collage/core/models/constant_event.dart'; // الموديل الخاص بالفعاليات الثابتة
@@ -12,10 +11,12 @@ import 'package:project1_collage/features/details_page/shared_widgets/info_tile.
 
 class ConstantEventDetailsBody extends StatefulWidget {
   const ConstantEventDetailsBody({super.key, required this.constantEvent});
-  final ConstantEventModel constantEvent; // استقبال موديل الفعالية الثابتة بدلاً من الخدمة
+  final ConstantEventModel
+  constantEvent; // استقبال موديل الفعالية الثابتة بدلاً من الخدمة
 
   @override
-  State<ConstantEventDetailsBody> createState() => _ConstantEventDetailsBodyState();
+  State<ConstantEventDetailsBody> createState() =>
+      _ConstantEventDetailsBodyState();
 }
 
 class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
@@ -38,10 +39,10 @@ class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
   Widget build(BuildContext context) {
     const Color primaryColor = Styles.mainColor;
     List<String>? imageUrls = widget.constantEvent.imageUrl;
-    
+
     // جلب الإحداثيات من الموديل ديناميكياً أو وضع إحداثيات افتراضية
     final LatLng eventCoordinates = LatLng(
-      widget.constantEvent.latitude ?? 24.7117, 
+      widget.constantEvent.latitude ?? 24.7117,
       widget.constantEvent.longitude ?? 46.6744,
     );
 
@@ -54,11 +55,15 @@ class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ============================== Top Image Slider ===========================
+                // داخل ConstantEventDetailsBody
+
+                // ============================== Top Image Slider ===========================
                 (imageUrls == null || imageUrls.isEmpty)
-                    ? UnsupportedImages()
+                    ? const UnsupportedImages() // 👈 يعمل الآن بدون خطأ وبدون أيقونة مفضلة
                     : DisplayingImages(
                         pageController: _pageController,
-                        primaryColor: primaryColor, imageUrls:imageUrls,
+                        primaryColor: primaryColor,
+                        imageUrls: imageUrls, // 👈 لا حاجة لتمرير service هنا
                       ),
 
                 // ============================== Content Details ===========================
@@ -82,9 +87,14 @@ class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: primaryColor.withOpacity(0.5)),
+                              border: Border.all(
+                                color: primaryColor.withOpacity(0.5),
+                              ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -121,7 +131,8 @@ class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
                       // 3. بطاقة عرض استيعاب المكان (تعديل السعر ليصبح عدداً للأشخاص)
                       InfoTile(
                         icon: Icons.people_alt_outlined,
-                        title: '${widget.constantEvent.accommodation} People Max',
+                        title:
+                            '${widget.constantEvent.accommodation} People Max',
                         subtitle: 'Maximum venue capacity allowed',
                         primaryColor: primaryColor,
                       ),
@@ -139,7 +150,9 @@ class _ConstantEventDetailsBodyState extends State<ConstantEventDetailsBody> {
                       ),
                       const SizedBox(height: 8),
                       DisplayingDescription(
-                        description: widget.constantEvent.description ?? 'No description available for this event.',
+                        description:
+                            widget.constantEvent.description ??
+                            'No description available for this event.',
                         primaryColor: primaryColor,
                       ),
                       const SizedBox(height: 24),

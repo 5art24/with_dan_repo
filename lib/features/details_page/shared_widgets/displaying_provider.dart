@@ -17,9 +17,7 @@ class DispalyingProvider extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 24,
-          backgroundImage: NetworkImage(
-            service.provider.urlImage,
-          ),
+          backgroundImage: NetworkImage(service.provider.urlImage),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -28,17 +26,11 @@ class DispalyingProvider extends StatelessWidget {
             children: [
               Text(
                 service.provider.username,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               Text(
                 'Organizer',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
             ],
           ),
@@ -52,10 +44,7 @@ class DispalyingProvider extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           ),
           child: const Text(
             'Follow',

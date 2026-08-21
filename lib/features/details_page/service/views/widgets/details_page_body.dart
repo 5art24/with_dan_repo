@@ -1,28 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:project1_collage/core/models/service.dart';
 import 'package:project1_collage/core/styles.dart';
-import 'package:project1_collage/features/details_page/constant_event/views/widgets/unexpnded_map.dart';
-import 'package:project1_collage/features/details_page/shared_widgets/back_and_favorite_button.dart';
+import 'package:project1_collage/core/view_model/auth/auth_cubit.dart';
 import 'package:project1_collage/core/widgets/calendar.dart';
+import 'package:project1_collage/features/details_page/service/views/widgets/interactive_rating_bar.dart';
 import 'package:project1_collage/features/details_page/shared_widgets/details_custom_button.dart';
 import 'package:project1_collage/features/details_page/shared_widgets/displaying_description.dart';
 import 'package:project1_collage/features/details_page/shared_widgets/displaying_images.dart';
 import 'package:project1_collage/features/details_page/shared_widgets/displaying_provider.dart';
-import 'package:project1_collage/features/details_page/shared_widgets/dots_indicator.dart';
-import 'package:project1_collage/core/widgets/map_screen.dart';
 import 'package:project1_collage/features/details_page/service/views/widgets/unsupported_images.dart';
 import 'package:project1_collage/features/details_page/shared_widgets/info_tile.dart';
 import 'package:project1_collage/features/planning_event/presentation/view_models/event_planning/event_planning_cubit.dart';
-import 'package:readmore/readmore.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart'; // استيراد حزمة الخرائط
-// استيراد حزمة الإحداثيات
 
 class DetailsPageBody extends StatefulWidget {
-  const DetailsPageBody({super.key, required this.serviceModel});
+  const DetailsPageBody({super.key, required this.serviceModel, this.cubit});
   final ServiceModel serviceModel;
+  final EventPlanningCubit? cubit;
 
   @override
   State<DetailsPageBody> createState() => _DetailsPageBodyState();
@@ -32,18 +26,6 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
   // التحكم في الـ PageView ومعرفة الصفحة الحالية
   final PageController _pageController = PageController();
 
-  // قائمة روابط الصور التجريبية للمهرجان
-  final List<String> _images = [
-    'https://picsum.photos/400/250',
-    // "assets/icons/photograph.png",
-    // "assets/icons/dj.png",
-    // "assets/icons/lighting.png",
-    'https://picsum.photos/id/1015/400/300', // منظر جبلي
-    'https://picsum.photos/id/104/400/300', // كلب
-    'https://picsum.photos/id/106/400/300', // زهور
-    'https://picsum.photos/id/155/400/300',
-  ];
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -52,9 +34,13 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
 
   @override
   Widget build(BuildContext context) {
-    final eventCubit = context.watch<EventPlanningCubit>();
-    final currentEvent = eventCubit.currentEvent;
+    final currentEvent = widget.cubit?.currentEvent;
     const Color primaryColor = Styles.mainColor;
+    final authCubit = context.read<AuthCubit>();
+    final currentUserId = authCubit.currentUser?.id ?? '';
+    final canRate =
+        widget.cubit?.canRateService(widget.serviceModel.id, currentUserId) ??
+        false;
 
     // ✅ حساب التوفر
     final isAvailable = _isServiceAvailableForEvent();
@@ -74,11 +60,11 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
                 (imageUrls == null || imageUrls.isEmpty)
                     ?
                       // يظهر هذا الـ Container مباشرة إذا لم تتوفر أي صور
-                      UnsupportedImages()
+                      UnsupportedImages(service: widget.serviceModel)
                     : DisplayingImages(
                         pageController: _pageController,
                         primaryColor: primaryColor,
-                        imageUrls: imageUrls,
+                        imageUrls: imageUrls, service: widget.serviceModel,
                       ),
 
                 // Service details content
@@ -184,17 +170,36 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
                       ),
                       const SizedBox(height: 32),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: DetailsCustomButton(
-                          isEnabled:
-                              isAvailable &&
-                              currentEvent != null, // فقط للتلوين/الشكل
-                          onPressed: () =>
-                              _onAddPressed(isAvailable, currentEvent),
+                      if (widget.cubit != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: DetailsCustomButton(
+                            isEnabled: isAvailable && currentEvent != null,
+                            onPressed: () =>
+                                _onAddPressed(isAvailable, currentEvent),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 55),
+                      SizedBox(height: 12),
+                      if (canRate) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            icon: const Icon(
+                              Icons.star_rate_rounded,
+                              color: Colors.amber,
+                            ),
+                            label: const Text("تقييم هذه الخدمة"),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: primaryColor,
+                              side: const BorderSide(color: primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () =>
+                                _showRatingDialog(context, currentUserId),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -207,6 +212,14 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
   }
 
   void _onAddPressed(bool isAvailable, dynamic currentEvent) {
+    // 👇 حالة جديدة: لا يوجد cubit إطلاقًا (قادمون من البروفايل، وضع عرض فقط)
+    if (widget.cubit == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن حجز الخدمة من هذه الصفحة')),
+      );
+      return;
+    }
+
     if (currentEvent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('الرجاء اختيار فعالية أولاً')),
@@ -231,8 +244,7 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
   }
 
   bool _isServiceAvailableForEvent() {
-    final eventCubit = context.read<EventPlanningCubit>();
-    final currentEvent = eventCubit.currentEvent;
+    final currentEvent = widget.cubit?.currentEvent; // ✅ nullable-safe
     if (currentEvent == null) return false;
 
     return widget.serviceModel.isAvailableForEvent(
@@ -241,17 +253,69 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
     );
   }
 
+  void _showRatingDialog(BuildContext context, String userId) {
+    double selectedRating = 5.0;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Rate Of ${widget.serviceModel.name}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🟢 استخدام الـ Rating Bar التفاعلي بدعم النصف والـ Hover والأنيميشن
+              InteractiveRatingBar(
+                initialRating: selectedRating,
+                onRatingChanged: (newRating) {
+                  selectedRating = newRating;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: commentController,
+                decoration: const InputDecoration(
+                  labelText: 'اكتب تعليقك (اختياري)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                widget.cubit?.submitServiceReview(
+                  serviceId: widget.serviceModel.id,
+                  userId: userId,
+                  rating: selectedRating,
+                  comment: commentController.text,
+                );
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('إرسال التقييم'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ✅ دالة لحجز الخدمة
   void _bookService() {
-    final eventCubit = context.read<EventPlanningCubit>();
-    final currentEvent = eventCubit.currentEvent;
+    final eventCubit = widget.cubit; // ✅ بدل context.read
+    if (eventCubit == null) return;
 
+    final currentEvent = eventCubit.currentEvent;
     if (currentEvent == null) return;
 
-    // إضافة الخدمة إلى الفعالية
     eventCubit.addService(widget.serviceModel);
 
-    // إظهار رسالة نجاح
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -262,7 +326,6 @@ class _DetailsPageBodyState extends State<DetailsPageBody> {
       ),
     );
 
-    // العودة إلى صفحة التخطيط
     Navigator.pop(context);
   }
 }

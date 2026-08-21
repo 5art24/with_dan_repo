@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:project1_collage/core/app_routes.dart';
 import 'package:project1_collage/core/styles.dart';
 
 /// Drawer ???? ????? ??????.
 /// ????? ???: ??????? ??????? ?? ???? ????? ??? ???????? ????? ??????.
-class ServiceProfileDrawer extends StatelessWidget {
-  final String userName;
+class ProfileDrawer extends StatelessWidget {
+  final String username;
   final String userEmail;
   final String? userImage;
   final VoidCallback onLogout;
 
-  const ServiceProfileDrawer({
+  const ProfileDrawer({
     Key? key,
-    required this.userName,
+    required this.username,
     required this.userEmail,
     this.userImage,
     required this.onLogout,
   }) : super(key: key);
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
@@ -69,7 +70,7 @@ class ServiceProfileDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    userName,
+                    username,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -118,11 +119,10 @@ class ServiceProfileDrawer extends StatelessWidget {
                   const SizedBox(height: 8),
                   _menuItem(
                     context,
-                    icon: Icons.info_outline,
-                    title: 'حول التطبيق',
+                    icon: Icons.favorite,
+                    title: 'المفضلة',
                     onTap: () {
-                      Navigator.pop(context);
-                      _showAboutDialog(context);
+                     GoRouter.of(context).push(AppRoutes.kFavorites);
                     },
                   ),
                   const SizedBox(height: 8),
@@ -161,7 +161,7 @@ class ServiceProfileDrawer extends StatelessWidget {
     );
   }
 
-Widget _menuItem(
+  Widget _menuItem(
     BuildContext context, {
     required IconData icon,
     required String title,
@@ -203,83 +203,83 @@ Widget _menuItem(
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'حول التطبيق',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Styles.primaryLight,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                gradient: Styles.primaryGradient,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.event, size: 40, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'eva (إيفا)',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Styles.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'تطبيق إدارة الفعاليات والخدمات',
-              style: TextStyle(fontSize: 14, color: Styles.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Styles.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'الإصدار: 1.0.0',
-                style: TextStyle(fontSize: 12, color: Styles.textSecondary),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '© 2026 eva. جميع الحقوق محفوظة.',
-              style: TextStyle(fontSize: 11, color: Styles.textHint),
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'حسناً',
-                style: TextStyle(
-                  color: Styles.primaryLight,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // void _showAboutDialog(BuildContext context) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  //       title: const Text(
+  //         'حول التطبيق',
+  //         textAlign: TextAlign.center,
+  //         style: TextStyle(
+  //           color: Styles.primaryLight,
+  //           fontWeight: FontWeight.bold,
+  //           fontSize: 20,
+  //         ),
+  //       ),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Container(
+  //             width: 80,
+  //             height: 80,
+  //             decoration: const BoxDecoration(
+  //               gradient: Styles.primaryGradient,
+  //               shape: BoxShape.circle,
+  //             ),
+  //             child: const Icon(Icons.event, size: 40, color: Colors.white),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           const Text(
+  //             'eva (إيفا)',
+  //             style: TextStyle(
+  //               fontSize: 22,
+  //               fontWeight: FontWeight.bold,
+  //               color: Styles.textPrimary,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 8),
+  //           const Text(
+  //             'تطبيق إدارة الفعاليات والخدمات',
+  //             style: TextStyle(fontSize: 14, color: Styles.textSecondary),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //             decoration: BoxDecoration(
+  //               color: Styles.surface,
+  //               borderRadius: BorderRadius.circular(12),
+  //             ),
+  //             child: const Text(
+  //               'الإصدار: 1.0.0',
+  //               style: TextStyle(fontSize: 12, color: Styles.textSecondary),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           const Text(
+  //             '© 2026 eva. جميع الحقوق محفوظة.',
+  //             style: TextStyle(fontSize: 11, color: Styles.textHint),
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         Center(
+  //           child: TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text(
+  //               'حسناً',
+  //               style: TextStyle(
+  //                 color: Styles.primaryLight,
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
@@ -345,4 +345,3 @@ Widget _menuItem(
     );
   }
 }
-

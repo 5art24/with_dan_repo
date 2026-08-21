@@ -17,15 +17,14 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       drawer: DrawerMenu(
-        userName: 'أحمد الزعبي',
-        userEmail: 'ahmed@example.com',
+        NormalUserName: 'أحمد الزعبي',
+        NormalUserEmail: 'ahmed@example.com',
         isServiceProvider: false,
         onServiceProviderToggle: (value) {},
         onLogout: () {
-          GoRouter.of(context).go(AppRoutes.kLogin);
+          // see GoRouter.of(context).go(AppRoutes.kLogin);
         },
       ),
       appBar: AppBar(
@@ -68,7 +67,8 @@ class HomeView extends StatelessWidget {
                 EventCubit(context.read<AuthCubit>())..loadUpcomingEvents(),
           ),
           BlocProvider<TaskCubit>(
-            create: (context) => TaskCubit( authCubit: context.read<AuthCubit>()),
+            create: (context) =>
+                TaskCubit(authCubit: context.read<AuthCubit>()),
           ),
         ],
         child: const HomeViewBody(),
